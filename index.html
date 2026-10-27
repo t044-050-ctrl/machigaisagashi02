@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>まちがいさがし２</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: M PLUS Rounded 1c -->
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: #0f172a;
+            touch-action: manipulation;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .card-hover {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.2);
+        }
+        .card-hover:active {
+            transform: translateY(0) scale(0.98);
+        }
+        @keyframes stampPop {
+            0% { transform: scale(3) rotate(-15deg); opacity: 0; }
+            50% { transform: scale(0.9) rotate(-5deg); opacity: 1; }
+            70% { transform: scale(1.05) rotate(-5deg); }
+            100% { transform: scale(1) rotate(-5deg); opacity: 1; }
+        }
+        .animate-stamp {
+            animation: stampPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes redCirclePop {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.25); opacity: 1; }
+            80% { transform: scale(0.9); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-red-circle {
+            animation: redCirclePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+    </style>
+</head>
+<body class="p-1 sm:p-2 md:p-3">
+
+    <!-- 16:9 Main Aspect Ratio Container -->
+    <div class="w-full h-full max-w-[177.78vh] max-h-[100vh] aspect-video bg-slate-100 rounded-2xl shadow-2xl overflow-hidden border-4 border-slate-700 flex flex-col justify-between select-none">
+
+        <!-- Top Navigation Bar -->
+        <div class="bg-slate-900 text-white px-2 py-1 flex items-center justify-between gap-2 border-b-2 border-slate-800 shrink-0 h-10">
+            <!-- Theme Tabs -->
+            <div id="themeTabsContainer" class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 flex-1 h-full">
+                <!-- Dynamic Theme Tabs -->
+            </div>
+
+            <!-- Top Right Settings -->
+            <div class="flex items-center gap-2 shrink-0">
+                <!-- Card Count Switcher -->
+                <div class="bg-slate-800 p-0.5 rounded-lg border border-slate-700 flex text-[11px] font-bold">
+                    <button id="btn4" onclick="setCardCount(4)" class="px-2 py-0.5 rounded transition-all bg-sky-500 text-white shadow">4まい</button>
+                    <button id="btn9" onclick="setCardCount(9)" class="px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white">9まい</button>
+                    <button id="btn12" onclick="setCardCount(12)" class="px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white">12まい</button>
+                </div>
+                <!-- Lap Counter Badge -->
+                <div id="lapBadge" class="bg-amber-500 text-slate-900 font-extrabold px-2.5 py-0.5 rounded-lg text-xs shadow border border-amber-300">
+                    1しゅうめ
+                </div>
+            </div>
+        </div>
+
+        <!-- Sub-Header Status & Control Bar -->
+        <div class="bg-slate-200/90 px-3 py-1 flex items-center justify-between gap-2 border-b border-slate-300 text-xs font-bold shrink-0 h-9">
+            <div class="flex items-center gap-2 overflow-hidden">
+                <span class="bg-slate-800 text-white text-[11px] font-black px-2 py-0.5 rounded shadow-sm shrink-0">
+                    見る力をつけよう
+                </span>
+                <span id="currentThemeTitle" class="text-slate-800 font-black text-xs sm:text-sm truncate shrink-0">
+                    ① イルカのおやこ
+                </span>
+                <div class="hidden md:flex items-center bg-white px-2 py-0.5 rounded-full border border-sky-300 text-[11px] text-slate-700 shadow-sm gap-1 truncate">
+                    <span class="bg-sky-500 text-white px-1 py-0.2 rounded text-[10px] font-extrabold">ルール</span>
+                    <span>1 (もとのえ) と <strong class="text-amber-600">【全くおなじ絵】</strong> を探すか、<strong class="text-rose-500">【ちがう部分】</strong> をタップ！</span>
+                </div>
+            </div>
+
+            <!-- Right Controls -->
+            <div class="flex items-center gap-1.5 shrink-0">
+                <!-- Found Counter -->
+                <div class="bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-lg flex items-center gap-1 text-xs font-black shadow-sm">
+                    <span class="text-emerald-700">🔍 みつけた:</span>
+                    <span id="scoreText" class="text-emerald-600 text-sm font-extrabold">0 / 11</span>
+                </div>
+
+                <!-- Next Button -->
+                <button onclick="nextTheme()" class="bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-extrabold px-2.5 py-1 rounded-lg shadow border border-sky-400 flex items-center gap-1 text-xs transition-all">
+                    <span>つぎへ</span>
+                    <span>❯</span>
+                </button>
+
+                <!-- Sound Toggle -->
+                <button id="soundBtn" onclick="toggleSound()" title="音のオン/オフ" class="bg-slate-300 hover:bg-slate-400 text-slate-700 px-2 py-1 rounded-lg shadow border border-slate-400 text-xs transition-all">
+                    🔊
+                </button>
+
+                <!-- Reset Button -->
+                <button onclick="resetCurrentGame()" title="シャッフルやりなおす" class="bg-slate-300 hover:bg-slate-400 text-slate-700 px-2 py-1 rounded-lg shadow border border-slate-400 text-xs transition-all">
+                    🔄
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Cards Grid Area -->
+        <div class="p-1.5 sm:p-2 bg-slate-300 flex-1 overflow-hidden">
+            <div id="cardsGrid" class="h-full w-full grid gap-1.5 sm:gap-2">
+                <!-- Dynamic cards rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal Overlay -->
+    <div id="successModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border-4 border-amber-400 transform transition-all">
+            <div class="text-6xl mb-2">🎉</div>
+            <h3 class="text-2xl font-black text-slate-800 mb-1">ぜんぶ できたね！</h3>
+            <p class="text-sm font-bold text-slate-600 mb-4">おなじ絵も ちがう部分も ぜんぶみつけられたよ！</p>
+            
+            <div id="modalCardPreview" class="w-32 h-32 mx-auto mb-4 bg-sky-50 rounded-2xl border-2 border-sky-200 p-2 shadow-inner flex items-center justify-center"></div>
+
+            <button onclick="closeModalNext()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-black text-lg py-3 rounded-2xl shadow-lg active:scale-95 transition-all">
+                つぎの もんだいへ 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Logic & SVG Renderer -->
+    <script>
+        const themes = [
+            { id: 'dinosaur', num: '1', symbol: '①', name: 'きょうりゅうとたまご' },
+            { id: 'castle', num: '2', symbol: '②', name: 'おしろ' },
+            { id: 'bakery', num: '3', symbol: '③', name: 'おかしやさん' },
+            { id: 'ocean', num: '4', symbol: '④', name: 'うみのいきもの' },
+            { id: 'racing', num: '5', symbol: '⑤', name: 'レーシングカー' },
+            { id: 'penguin', num: '6', symbol: '⑥', name: 'ペンギンのおやこ' },
+            { id: 'festival', num: '7', symbol: '⑦', name: 'なつまつり' }
+        ];
+
+        // Global Game State
+        let currentThemeIndex = 0;
+        let cardCount = 4;
+        let correctIndex = -1;
+        let foundCards = new Set();
+        let lapCount = 1;
+        let soundEnabled = true;
+        let activeCardConfigs = {};
+
+
+        // Chromebook / touch screen: do not show browser context menus on right-click or long/double interaction.
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('dblclick', event => event.preventDefault());
+
+        // Sound System (Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const now = audioCtx.currentTime;
+
+            if (type === 'found') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.12); // D6
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            } else if (type === 'correct') {
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+                    gain.gain.setValueAtTime(0.25, now + idx * 0.07);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.07);
+                    osc.stop(now + idx * 0.07 + 0.25);
+                });
+            } else if (type === 'wrong') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.setValueAtTime(130, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.22);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundBtn').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderThemeTabs();
+            generateGame();
+        });
+
+        function renderThemeTabs() {
+            const container = document.getElementById('themeTabsContainer');
+            container.innerHTML = '';
+
+            themes.forEach((theme, idx) => {
+                const btn = document.createElement('button');
+                const isActive = idx === currentThemeIndex;
+                btn.className = `flex items-center gap-1 px-2 py-1 rounded-lg font-bold text-xs shrink-0 transition-all cursor-pointer ${
+                    isActive 
+                    ? 'bg-sky-500 text-white shadow-md ring-1 ring-sky-300' 
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                }`;
+                btn.onclick = () => selectTheme(idx);
+                btn.innerHTML = `
+                    <span class="whitespace-nowrap">${theme.symbol} ${theme.name}</span>
+                `;
+                container.appendChild(btn);
+            });
+
+            const curr = themes[currentThemeIndex];
+            document.getElementById('currentThemeTitle').innerText = `${curr.symbol} ${curr.name}`;
+            updateScoreText();
+            document.getElementById('lapBadge').innerText = `${lapCount}しゅうめ`;
+        }
+
+        function updateScoreText() {
+            const totalToFind = cardCount - 1;
+            document.getElementById('scoreText').innerText = `${foundCards.size} / ${totalToFind}`;
+        }
+
+        function selectTheme(index) {
+            currentThemeIndex = index;
+            renderThemeTabs();
+            generateGame();
+        }
+
+        function setCardCount(count) {
+            cardCount = count;
+            ['btn4', 'btn9', 'btn12'].forEach(id => {
+                const btn = document.getElementById(id);
+                const selected = Number(id.replace('btn', '')) === count;
+                btn.className = selected
+                    ? 'px-2 py-0.5 rounded transition-all bg-sky-500 text-white shadow'
+                    : 'px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white';
+            });
+            generateGame();
+        }
+
+        function nextTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            if (currentThemeIndex === 0) {
+                lapCount++;
+            }
+            renderThemeTabs();
+            generateGame();
+        }
+
+        function resetCurrentGame() {
+            generateGame();
+        }
+
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // 7テーマそれぞれに、絵の形や部品そのものが変わる20種類の間違いを用意
+        const variationSpots = [
+          [100,65,18],[135,72,18],[75,105,18],[120,120,18],[45,145,17],
+          [155,145,17],[95,95,16],[60,65,16],[145,45,16],[100,150,17],
+          [35,100,17],[165,100,17],[80,45,15],[120,45,15],[55,125,16],
+          [145,125,16],[100,35,15],[35,160,15],[165,160,15],[100,100,20]
+        ];
+        const diffNames = ['eye','mouth','body','tail','spot','egg','wing','roof','window','flower','leaf','cheek','cloud','hat','belly','wheel','scarf','lantern','cupcake','shape'];
+        const themeVariations = {};
+        const visibleVariationTypes = {};
+        themes.forEach(theme => {
+          themeVariations[theme.id] = diffNames.map((name, i) => ({ diffType: `${name}_${i}`, spot: { cx: variationSpots[i][0], cy: variationSpots[i][1], r: variationSpots[i][2] } }));
+          visibleVariationTypes[theme.id] = diffNames.map((name, i) => `${name}_${i}`);
+        });
+
+        let gameGenerationToken = 0;
+        async function svgPixelSignature(svgText) {
+            const pixels = await svgToPixels(svgText);
+            // Compare the rendered pixels, not SVG text: visually identical SVGs must be treated as duplicates.
+            let hash = 2166136261;
+            for (let i = 0; i < pixels.length; i += 4) {
+                hash ^= pixels[i]; hash = Math.imul(hash, 16777619);
+                hash ^= pixels[i + 1]; hash = Math.imul(hash, 16777619);
+                hash ^= pixels[i + 2]; hash = Math.imul(hash, 16777619);
+                hash ^= pixels[i + 3]; hash = Math.imul(hash, 16777619);
+            }
+            return `${hash >>> 0}:${pixels.length}`;
+        }
+
+        async function generateGame() {
+            const thisGeneration = ++gameGenerationToken;
+            foundCards.clear();
+            activeCardConfigs = {};
+            updateScoreText();
+
+            const grid = document.getElementById('cardsGrid');
+            grid.innerHTML = '';
+
+            if (cardCount === 4) {
+                grid.className = "h-full w-full grid grid-cols-2 grid-rows-2 gap-2 sm:gap-3";
+            } else if (cardCount === 12) {
+                grid.className = "h-full w-full grid grid-cols-4 grid-rows-3 gap-1.5 sm:gap-2";
+            } else {
+                grid.className = "h-full w-full grid grid-cols-3 grid-rows-3 gap-1.5 sm:gap-2";
+            }
+
+            const activeTheme = themes[currentThemeIndex].id;
+            const totalSelectableCards = cardCount - 1;
+            correctIndex = Math.floor(Math.random() * totalSelectableCards) + 2;
+
+            const rawVars = themeVariations[activeTheme] || themeVariations['dolphin'];
+            const preferredTypes = visibleVariationTypes[activeTheme] || visibleVariationTypes.dolphin;
+            const originalSvg = drawIllustration(activeTheme, { isOriginal: true }, false);
+
+            // 実際のSVGをラスタライズし、画素のハッシュで重複を判定する。
+            // diffType名が違っても見た目が同じなら採用せず、元絵と同じ絵も除外する。
+            const seenPixelSignatures = new Set([await svgPixelSignature(originalSvg)]);
+            const seenDiffTypes = new Set();
+            const uniqueVars = [];
+            const orderedTypes = [...preferredTypes];
+            for (const type of orderedTypes) {
+                if (thisGeneration !== gameGenerationToken) return;
+                if (seenDiffTypes.has(type)) continue;
+                const item = rawVars.find(v => v.diffType === type);
+                if (!item) continue;
+                const rendered = drawIllustration(activeTheme, { isOriginal: false, diffType: item.diffType }, false);
+                let signature;
+                try { signature = await svgPixelSignature(rendered); }
+                catch (error) { console.error('SVGの描画比較に失敗しました', error); continue; }
+                // 画面に描画した結果が元絵や他の差分と同じなら、候補から除外する。
+                if (seenPixelSignatures.has(signature)) continue;
+                seenDiffTypes.add(type);
+                seenPixelSignatures.add(signature);
+                uniqueVars.push(item);
+            }
+            if (thisGeneration !== gameGenerationToken) return;
+
+            const shuffledVars = shuffleArray(uniqueVars);
+            const requiredDifferences = cardCount - 2; // 4枚なら2種類、9枚なら7種類、12枚なら10種類
+            if (shuffledVars.length < requiredDifferences) {
+                console.error(`重複なしで用意できる差分が不足しています: ${activeTheme}。必要=${requiredDifferences}、利用可能=${shuffledVars.length}`);
+                grid.innerHTML = `<div class="col-span-full flex items-center justify-center rounded-xl bg-amber-50 p-6 text-center font-bold text-amber-900">このテーマの間違いパターンが不足しています。重複した絵は出さず、別のテーマを選んでください。</div>`;
+                return;
+            }
+
+            // 1. Target Card
+            activeCardConfigs[1] = { isOriginal: true };
+            const card1 = document.createElement('div');
+            card1.className = 'bg-white rounded-xl border-2 border-sky-400 overflow-hidden shadow flex flex-col justify-between relative h-full';
+            card1.innerHTML = `
+                <div class="bg-sky-500 text-white px-2 py-0.5 text-[11px] font-black flex items-center gap-1 shrink-0">
+                    <span>👑</span>
+                    <span>1 もとのえ</span>
+                </div>
+                <div class="p-1 bg-sky-50/50 flex-1 flex items-center justify-center overflow-hidden">
+                    <div class="w-full h-full ${cardCount === 4 ? 'max-w-[min(42vh,42vw)] max-h-[min(42vh,42vw)]' : 'max-w-[150px] max-h-[150px]'} aspect-square flex items-center justify-center">
+                        ${drawIllustration(activeTheme, { isOriginal: true })}
+                    </div>
+                </div>
+                <div class="bg-sky-100 text-sky-800 text-center py-0.5 text-[10px] sm:text-[11px] font-bold border-t border-sky-200 shrink-0">
+                    ✓ これを みくらべる
+                </div>
+            `;
+            grid.appendChild(card1);
+
+            // 2. Option Cards
+            let varIdx = 0;
+            for (let cardNum = 2; cardNum <= cardCount; cardNum++) {
+                const isCorrect = (cardNum === correctIndex);
+                let diffConfig;
+
+                if (isCorrect) {
+                    diffConfig = { isOriginal: true };
+                } else {
+                    const item = shuffledVars[varIdx];
+                    varIdx++;
+                    // 候補不足時のダミー絵は作らない。事前の画素比較で必要数を確保している。
+                    if (!item) return;
+                    diffConfig = {
+                        isOriginal: false,
+                        diffType: item.diffType,
+                        spot: item.spot
+                    };
+                }
+
+                activeCardConfigs[cardNum] = diffConfig;
+
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card-hover bg-white rounded-xl border-2 border-slate-300 overflow-hidden shadow-sm flex flex-col justify-between relative group cursor-pointer h-full';
+                cardEl.id = `card-${cardNum}`;
+
+                cardEl.innerHTML = `
+                    <div class="absolute top-1 left-1 z-10 bg-slate-800 text-white font-black text-[11px] w-5 h-5 rounded-md flex items-center justify-center shadow">
+                        ${cardNum}
+                    </div>
+
+                    <div class="p-1 pt-4 bg-white flex-1 flex items-center justify-center overflow-hidden" onclick="handleCardClick(event, ${cardNum})">
+                        <div id="img-container-${cardNum}" class="w-full h-full ${cardCount === 4 ? 'max-w-[min(42vh,42vw)] max-h-[min(42vh,42vw)]' : 'max-w-[150px] max-h-[150px]'} aspect-square flex items-center justify-center relative">
+                            ${drawIllustration(activeTheme, diffConfig, false)}
+                        </div>
+                    </div>
+
+                    <div id="stamp-${cardNum}" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 z-20">
+                        <div class="w-20 h-20 border-4 border-emerald-500 text-emerald-600 rounded-full flex items-center justify-center font-black text-[11px] border-dashed transform -rotate-12 bg-white/95 shadow-xl text-center leading-tight">
+                            たいへん<br>よくできました
+                        </div>
+                    </div>
+
+                    <button onclick="handleMatchBtnClick(${cardNum})" class="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 active:scale-98 text-slate-900 font-extrabold py-1 px-1 text-[11px] sm:text-xs flex items-center justify-center gap-0.5 border-t border-amber-300 shadow-inner shrink-0">
+                        <span>★ ★ これがおなじえ！</span>
+                    </button>
+                `;
+
+                grid.appendChild(cardEl);
+            }
+        }
+
+        function handleCardClick(event, cardNum) {
+            if (foundCards.has(cardNum)) return;
+            // 「同じ絵」は絵をタップしても正解にしない。
+            // どの絵でも、絵をタップする操作自体は不正解音にする。
+            if (cardNum === correctIndex) {
+                playSound('wrong');
+                return;
+            }
+            const config = activeCardConfigs[cardNum];
+            if (!config) return;
+            const svg = event.currentTarget.querySelector('svg');
+            if (!svg) return;
+            const matrix = svg.getScreenCTM();
+            if (!matrix) return;
+            const point = svg.createSVGPoint();
+            point.x = event.clientX;
+            point.y = event.clientY;
+            const svgPoint = point.matrixTransform(matrix.inverse());
+
+            // 汎用の目印位置ではなく、元絵と実際のSVGを画素比較して、
+            // 本当に絵が変わっている場所をタップしたときだけ正解にする。
+            isTapOnActualDifference(themes[currentThemeIndex].id, config, svgPoint.x, svgPoint.y)
+                .then(isDifference => {
+                    if (foundCards.has(cardNum)) return;
+                    if (isDifference) {
+                        const tappedSpot = { cx: svgPoint.x, cy: svgPoint.y, r: 12 };
+                        markCardAsFound(cardNum, false, tappedSpot);
+                    } else {
+                        playSound('wrong');
+                    }
+                })
+                .catch(() => playSound('wrong'));
+        }
+
+        const differenceHitCache = new Map();
+
+        function svgToPixels(svgText) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 200;
+                    canvas.height = 200;
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    ctx.drawImage(img, 0, 0, 200, 200);
+                    try {
+                        resolve(ctx.getImageData(0, 0, 200, 200).data);
+                    } catch (e) { reject(e); }
+                };
+                img.onerror = reject;
+                const svgWithSize = svgText.replace('<svg ', '<svg width="200" height="200" ');
+                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgWithSize)));
+            });
+        }
+
+        async function isTapOnActualDifference(theme, config, x, y) {
+            const key = `${theme}|${config.diffType || 'original'}`;
+            let mask = differenceHitCache.get(key);
+            if (!mask) {
+                const originalSvg = drawIllustration(theme, { isOriginal: true }, false);
+                const changedSvg = drawIllustration(theme, config, false);
+                const [originalPixels, changedPixels] = await Promise.all([
+                    svgToPixels(originalSvg), svgToPixels(changedSvg)
+                ]);
+                mask = new Uint8Array(200 * 200);
+                for (let py = 0; py < 200; py++) {
+                    for (let px = 0; px < 200; px++) {
+                        const i = (py * 200 + px) * 4;
+                        const delta = Math.abs(originalPixels[i] - changedPixels[i]) +
+                                      Math.abs(originalPixels[i+1] - changedPixels[i+1]) +
+                                      Math.abs(originalPixels[i+2] - changedPixels[i+2]) +
+                                      Math.abs(originalPixels[i+3] - changedPixels[i+3]);
+                        if (delta > 30) mask[py * 200 + px] = 1;
+                    }
+                }
+                differenceHitCache.set(key, mask);
+            }
+            const cx = Math.round(x), cy = Math.round(y);
+            // タップ誤差を少し許容する。違いの輪郭から最大4px以内なら反応。
+            for (let dy = -7; dy <= 7; dy++) {
+                for (let dx = -7; dx <= 7; dx++) {
+                    if (dx*dx + dy*dy > 49) continue;
+                    const px = cx + dx, py = cy + dy;
+                    if (px >= 0 && px < 200 && py >= 0 && py < 200 && mask[py * 200 + px]) return true;
+                }
+            }
+            return false;
+        }
+
+        function handleMatchBtnClick(cardNum) {
+            if (foundCards.has(cardNum)) return;
+            // オレンジ色の「これがおなじえ！」バーだけが、
+            // 同じ絵を正解にできる操作。
+            const isCorrect = (cardNum === correctIndex);
+            if (isCorrect) {
+                markCardAsFound(cardNum, true);
+            } else {
+                playSound('wrong');
+                const cardEl = document.getElementById(`card-${cardNum}`);
+                cardEl.classList.add('translate-x-1');
+                setTimeout(() => cardEl.classList.remove('translate-x-1'), 80);
+                setTimeout(() => cardEl.classList.add('-translate-x-1'), 160);
+                setTimeout(() => cardEl.classList.remove('-translate-x-1'), 240);
+            }
+        }
+
+        function markCardAsFound(cardNum, isCorrect, tappedSpot = null) {
+            foundCards.add(cardNum);
+            updateScoreText();
+
+            const cardEl = document.getElementById(`card-${cardNum}`);
+            const imgContainer = document.getElementById(`img-container-${cardNum}`);
+            const diffConfig = activeCardConfigs[cardNum];
+
+            if (isCorrect) {
+                playSound('correct');
+                const stamp = document.getElementById(`stamp-${cardNum}`);
+                if (stamp) {
+                    stamp.classList.remove('opacity-0');
+                    stamp.classList.add('animate-stamp');
+                }
+                cardEl.classList.remove('border-slate-300');
+                cardEl.classList.add('border-emerald-500', 'ring-2', 'ring-emerald-300');
+            } else {
+                playSound('found');
+                const activeTheme = themes[currentThemeIndex].id;
+                imgContainer.innerHTML = drawIllustration(activeTheme, { ...diffConfig, spot: tappedSpot || diffConfig.spot }, true);
+
+                cardEl.classList.remove('border-slate-300');
+                cardEl.classList.add('border-rose-400', 'bg-rose-50/20');
+            }
+
+            const totalToFind = cardCount - 1;
+            if (foundCards.size === totalToFind) {
+                confetti({
+                    particleCount: 100,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+
+                setTimeout(() => {
+                    const modalPreview = document.getElementById('modalCardPreview');
+                    modalPreview.innerHTML = drawIllustration(themes[currentThemeIndex].id, { isOriginal: true }, false);
+                    document.getElementById('successModal').classList.remove('hidden');
+                }, 600);
+            }
+        }
+
+        function closeModalNext() {
+            document.getElementById('successModal').classList.add('hidden');
+            nextTheme();
+        }
+
+        // SVGの図形と曲線だけで描画。絵の主役の形そのものを変化させる。
+        function drawIllustration(theme, config, showRedCircle = false) {
+          const original = !!config.isOriginal;
+          const match = (config.diffType || '').match(/_(\d+)$/);
+          const n = (!original && match) ? Number(match[1]) : -1;
+          const ch = i => false; // 差分は下のテーマ別一覧だけで管理し、重複した変更を防ぐ
+          const sky = `<rect width="200" height="200" rx="12" fill="#dff3ff"/><path d="M0 142 Q40 128 78 143 T150 140 T200 143 V200 H0Z" fill="#a9d28d"/>`;
+          const eye = (x,y,r=3) => `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r+1}" fill="#263238"/><circle cx="${x+1}" cy="${y-1}" r="1.2" fill="#fff"/>`;
+          let scene = sky;
+          if (theme === 'dinosaur') {
+            // 首の長い竜脚類。卵は一つだけ。模様の大きさ・色も出題差分になる。
+            const spotColor = '#397e70';
+            const spotR = 5;
+            scene += `<path d="M0 164 Q42 157 82 165 T200 161 V200 H0Z" fill="#78b96d"/><path d="M12 169 Q31 148 50 169" fill="none" stroke="#5c9a57" stroke-width="5" stroke-linecap="round"/>
+            <path d="M42 154 C44 128 65 115 91 119 C111 120 128 132 134 148 C142 148 148 139 148 125 L148 79 C148 62 157 50 170 54 C181 57 183 70 175 79 L166 84 L165 126 C165 151 153 166 131 168 L98 168 L88 181 L73 181 L75 166 L58 166 L53 181 L39 181Z" fill="#67aa9b" stroke="#315f5a" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M148 78 Q157 72 169 77 L181 84 L174 91 L158 90 Q151 88 148 78Z" fill="#8ac8b8" stroke="#315f5a" stroke-width="2.5"/><path d="M154 93 Q165 97 175 91" fill="none" stroke="#315f5a" stroke-width="2" stroke-linecap="round"/>
+            ${eye(165,72,3.5)}<path d="M151 57 Q157 49 163 56 M163 54 Q169 47 174 56" fill="none" stroke="#315f5a" stroke-width="3" stroke-linecap="round"/>
+            <path d="M77 141 Q88 148 101 151 L128 151 Q137 150 143 143 L143 158 Q128 170 99 166 L81 160Z" fill="#d5d99a"/><path d="M82 147 L84 157 M95 150 L97 162 M109 152 L111 164 M123 152 L125 163" stroke="#b4bd7b" stroke-width="2"/>
+            <g fill="${spotColor}" stroke="#315f5a" stroke-width="1">${[[65,145],[81,145],[98,153],[117,158],[139,144],[158,105],[158,120]].map(([x,y],i)=>`<ellipse cx="${x}" cy="${y}" rx="${ch(6)?spotR+2:spotR}" ry="${ch(6)?spotR:spotR+1}" transform="rotate(-18 ${x} ${y})"/>`).join('')}</g>
+            <ellipse cx="36" cy="178" rx="23" ry="6" fill="#5a9b53"/><ellipse cx="35" cy="154" rx="23" ry="27" fill="#fff4d5" stroke="#b7a274" stroke-width="2.5"/><path d="M26 145 Q35 138 44 146" fill="none" stroke="#d6c39a" stroke-width="2"/>`;
+            if(ch(0)) scene += `<path d="M165 68 Q171 63 176 69" fill="none" stroke="#315f5a" stroke-width="2.5"/>`;
+            if(ch(1)) scene += `<path d="M174 85 L182 83" stroke="#315f5a" stroke-width="2.5" stroke-linecap="round"/>`;
+            if(ch(3)) scene += `<path d="M42 154 Q24 151 17 139" fill="none" stroke="#315f5a" stroke-width="5" stroke-linecap="round"/>`;
+            if(ch(8)) scene += `<path d="M35 132 L35 123" stroke="#b7a274" stroke-width="3"/>`;
+            
+            
+            
+          } else if (theme === 'castle') {
+            scene += `<path d="M0 172 H200 V200 H0Z" fill="#8dc77d"/><path d="M18 175 L28 166 H172 L184 175Z" fill="#d9c8a2"/>
+            <path d="M31 169 V82 H63 V169 M72 169 V57 H128 V169 M137 169 V82 H169 V169" fill="#f8edcf" stroke="#9b9b91" stroke-width="2.5"/>
+            <path d="M26 85 L47 47 L68 85Z" fill="${ch(7)?'#d74d42':'#3679b7'}" stroke="#28557f" stroke-width="2.5"/><path d="M66 60 L100 20 L134 60Z" fill="${ch(8)?'#d74d42':'#3679b7'}" stroke="#28557f" stroke-width="2.5"/><path d="M132 85 L153 47 L174 85Z" fill="#3679b7" stroke="#28557f" stroke-width="2.5"/>
+            <path d="M18 84 H76 V92 H18Z M60 59 H140 V67 H60Z M124 84 H182 V92 H124Z" fill="#d8d3c5" stroke="#9b9b91" stroke-width="2"/>
+            <path d="M83 169 V143 Q83 124 100 124 Q117 124 117 143 V169Z" fill="#7e5138" stroke="#68412f" stroke-width="2.5"/><path d="M93 169 V146 Q100 136 107 146 V169" fill="#a16b48"/>
+            ${[42,83,100,117,158].map((x,i)=>`<rect x="${x-4}" y="${i===2?82:108}" width="8" height="13" rx="3" fill="${ch(9)&&i===1?'#f4c95d':'#8bcde8'}" stroke="#6e8c9c" stroke-width="1.5"/>`).join('')}
+            <path d="M47 47 V34 L57 39 L47 44 M100 20 V7 L112 12 L100 17 M153 47 V34 L164 39 L153 44" fill="#d94d43" stroke="#8d403a" stroke-width="1.5"/>`;
+            if(ch(0)) scene += `<rect x="95" y="82" width="10" height="15" rx="3" fill="#8bcde8" stroke="#6e8c9c" stroke-width="1.5"/>`;
+            if(ch(1)) scene += `<path d="M72 57 L100 28 L128 57Z" fill="#4d8fca" stroke="#28557f" stroke-width="2.5"/>`;
+            if(ch(2)) scene += `<path d="M83 169 V143 Q83 124 100 124 Q117 124 117 143 V169Z" fill="#bd8356" stroke="#68412f" stroke-width="2.5"/>`;
+          } else if (theme === 'bakery') {
+            // 店を大きく見せ、菓子の種類と形を主な差分にする。
+            scene += `<rect x="8" y="24" width="184" height="168" rx="4" fill="#f6d9a8" stroke="#a66b42" stroke-width="3"/><path d="M8 29 H192 V49 H8Z" fill="#fff7e8"/><path d="M8 29 Q20 52 32 29 Q44 52 56 29 Q68 52 80 29 Q92 52 104 29 Q116 52 128 29 Q140 52 152 29 Q164 52 176 29 Q184 48 192 29" fill="#e66b60"/>
+            <rect x="52" y="8" width="96" height="29" rx="5" fill="#7a4a2b" stroke="#55331f" stroke-width="2"/><text x="100" y="27" font-size="13" font-weight="800" text-anchor="middle" fill="#fff1ce">おかしやさん</text>
+            <path d="M15 93 H185 M15 143 H185" stroke="#ad794d" stroke-width="5"/><path d="M15 98 H185 M15 148 H185" stroke="#f9e6c4" stroke-width="2"/>
+            <g stroke="#9d633b" stroke-width="2.5"><path d="M24 87 L30 62 Q48 51 65 62 L72 87Z" fill="${ch(18)?'#8d5bb8':'#f1c65d'}"/><ellipse cx="48" cy="62" rx="18" ry="7" fill="#fff2d7"/><circle cx="48" cy="56" r="5" fill="#e75b4f"/>
+            <path d="M83 87 L90 62 Q108 52 125 62 L132 87Z" fill="#d85d58"/><ellipse cx="107" cy="62" rx="18" ry="7" fill="#fff2d7"/><circle cx="107" cy="55" r="5" fill="#f1c65d"/>
+            <path d="M143 87 L150 62 Q166 53 180 62 L184 87Z" fill="#8ebd78"/><ellipse cx="164" cy="62" rx="17" ry="7" fill="#fff2d7"/><circle cx="164" cy="55" r="5" fill="#e75b4f"/></g>
+            <g><path d="M20 135 Q20 112 39 112 Q58 112 58 135Z" fill="#f2a4b4" stroke="#ad6174" stroke-width="2.5"/><path d="M20 124 Q39 135 58 124" fill="none" stroke="#fff1e7" stroke-width="4"/><circle cx="39" cy="111" r="5" fill="#e74f54"/>
+            <circle cx="92" cy="123" r="18" fill="#815038" stroke="#593a2c" stroke-width="2.5"/><circle cx="92" cy="123" r="10" fill="#d9a36e"/><circle cx="92" cy="123" r="4" fill="#815038"/>
+            <path d="M126 135 Q126 111 145 111 Q164 111 164 135Z" fill="#f0ca73" stroke="#b78b42" stroke-width="2.5"/><path d="M126 122 Q145 134 164 122" fill="none" stroke="#fff2d7" stroke-width="4"/><circle cx="145" cy="111" r="5" fill="#8bbd73"/></g>
+            <g><ellipse cx="39" cy="168" rx="18" ry="11" fill="${ch(19)?'#c86a46':'#e9b4c2'}" stroke="#b16c7b" stroke-width="2"/><ellipse cx="39" cy="168" rx="7" ry="4" fill="#f8e6cf"/><path d="M74 180 L83 157 H111 L120 180Z" fill="#e8a34f" stroke="#a66b42" stroke-width="2.5"/><ellipse cx="97" cy="157" rx="14" ry="5" fill="#f8dfad"/><path d="M139 180 Q139 158 158 158 Q177 158 177 180Z" fill="#7bb5d9" stroke="#4b84a4" stroke-width="2.5"/><circle cx="158" cy="157" r="5" fill="#f4c75e"/></g>`;
+            if(ch(0)) scene += `<circle cx="39" cy="111" r="7" fill="#8bbd73"/>`;
+            if(ch(1)) scene += `<path d="M83 87 L90 57 Q108 47 125 57 L132 87Z" fill="#d85d58" stroke="#9d633b" stroke-width="2.5"/>`;
+            if(ch(2)) scene += `<circle cx="92" cy="123" r="12" fill="#815038" stroke="#593a2c" stroke-width="2.5"/>`;
+                    } else if (theme === 'ocean') {
+            // うみのいきもの：くじら・かめ・しま模様の魚・たこを、形で見分けやすく大きく描く。
+            scene = `<rect width="200" height="200" rx="12" fill="#b9edff"/>
+            <path d="M0 32 Q24 25 48 32 T96 32 T144 32 T200 32 V200 H0Z" fill="#45bfe4"/>
+            <path d="M0 70 Q25 63 50 70 T100 70 T150 70 T200 70 M0 112 Q25 105 50 112 T100 112 T150 112 T200 112 M0 157 Q25 150 50 157 T100 157 T150 157 T200 157" fill="none" stroke="#8ce3f2" stroke-width="2.5"/>
+            <g stroke="#245d80" stroke-width="2.4" stroke-linejoin="round">
+              <!-- くじら：大きな体、尾びれ、潮吹き -->
+              <path d="M17 64 Q20 42 49 40 Q79 39 94 57 Q101 67 91 78 Q77 91 47 84 Q25 81 17 64Z" fill="#348ec7"/>
+              <path d="M88 57 Q102 47 108 39 Q111 55 101 66Z" fill="#348ec7"/>
+              <path d="M36 79 Q54 91 73 81 Q65 94 48 92Z" fill="#f7fbff" stroke="none"/>
+              <path d="M31 70 Q44 82 57 77 Q47 87 34 81Z" fill="#d8f5ff" stroke="none"/>
+              <circle cx="72" cy="55" r="3.3" fill="#172f46" stroke="none"/>
+              <path d="M65 66 Q72 71 78 66" fill="none" stroke="#172f46" stroke-width="1.8"/>
+              <path d="M44 37 Q39 29 44 24 M44 31 Q51 27 53 21" fill="none" stroke="#e9fbff" stroke-width="2.8" stroke-linecap="round"/>
+              <!-- かめ：丸い甲羅、甲羅の区切り、4本の足 -->
+              <path d="M124 111 Q115 105 114 114 Q114 123 125 122 M162 111 Q174 105 176 114 Q176 123 164 122 M132 126 Q126 137 133 140 Q141 140 142 130 M155 126 Q163 137 156 140 Q149 140 148 130" fill="#69c96b"/>
+              <ellipse cx="145" cy="113" rx="26" ry="20" fill="#72c85f"/>
+              <path d="M122 111 Q124 92 145 91 Q166 92 168 111 Q165 127 145 130 Q125 127 122 111Z" fill="#9a773c"/>
+              <path d="M145 93 L145 128 M125 105 L138 111 L128 123 M165 105 L152 111 L162 123" fill="none" stroke="#e4c16d" stroke-width="2"/>
+              <path d="M164 112 Q178 105 182 116 Q179 125 165 122Z" fill="#69c96b"/>
+              <circle cx="173" cy="114" r="2.3" fill="#173b32" stroke="none"/>
+              <path d="M170 120 Q174 123 178 120" fill="none" stroke="#245d80" stroke-width="1.5"/>
+              <!-- しま模様の魚：はっきりした魚の輪郭と尾びれ -->
+              <path d="M15 137 Q28 119 49 128 Q57 132 62 137 Q49 151 30 149 Q20 147 15 137Z" fill="#ff9c43"/>
+              <path d="M16 137 L5 127 L5 147Z" fill="#ff9c43"/>
+              <path d="M29 126 Q35 137 29 149 M43 127 Q49 137 43 147" fill="none" stroke="#fff8e8" stroke-width="5"/>
+              <circle cx="51" cy="134" r="2.7" fill="#172f46" stroke="none"/>
+              <path d="M48 141 Q52 144 55 141" fill="none" stroke="#172f46" stroke-width="1.4"/>
+              <!-- たこ：丸い頭と8本の足 -->
+              <path d="M76 165 Q67 174 73 181 Q79 185 84 176 L87 169 Q87 181 94 182 Q101 181 99 168 Q103 180 110 177 Q117 173 110 162" fill="#f06b91" stroke="#a83e68" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M78 162 Q74 146 88 140 Q102 136 111 148 Q117 158 109 166 Q99 173 86 169Z" fill="#f8799c" stroke="#a83e68" stroke-width="2.2"/>
+              <circle cx="88" cy="155" r="2.5" fill="#3b2940" stroke="none"/><circle cx="103" cy="155" r="2.5" fill="#3b2940" stroke="none"/>
+              <path d="M91 161 Q96 165 101 161" fill="none" stroke="#a83e68" stroke-width="1.8" stroke-linecap="round"/>
+            </g>
+            <g fill="#f2fcff" opacity=".95"><circle cx="15" cy="91" r="3"/><circle cx="22" cy="100" r="2"/><circle cx="185" cy="54" r="3"/><circle cx="179" cy="62" r="2"/></g>`;
+            if(ch(0)) scene += `<path d="M44 39 Q31 25 38 10 M44 34 Q57 19 55 5 M44 29 Q45 17 44 7" fill="none" stroke="#e9fbff" stroke-width="5.5" stroke-linecap="round"/>`;
+            if(ch(1)) scene += `<path d="M145 93 L145 128 M125 105 L138 111 L128 123 M165 105 L152 111 L162 123" fill="none" stroke="#e4c16d" stroke-width="3.5"/>`;
+            if(ch(2)) scene += `<path d="M29 126 Q35 137 29 149 M43 127 Q49 137 43 147" fill="none" stroke="#fff8e8" stroke-width="7"/>`;
+            if(ch(3)) scene += `<circle cx="88" cy="155" r="3.5" fill="#3b2940"/><circle cx="103" cy="155" r="3.5" fill="#3b2940"/>`;
+          } else if (theme === 'racing') {
+            // 低いノーズ、むき出しのタイヤ、コックピット、リアウイングを備えたフォーミュラカー。
+            scene += `<path d="M0 143 L200 126 V200 H0Z" fill="#626d76"/><path d="M0 161 L200 145" stroke="#f8f4e9" stroke-width="4" stroke-dasharray="15 12"/><path d="M0 188 L200 172" stroke="#d8dfe3" stroke-width="3"/><path d="M18 50 H46 V84 H18Z" fill="#fff" stroke="#263b4b" stroke-width="2"/><path d="M18 50 H32 V67 H18 M32 67 H46 V84 H32" fill="#263b4b"/>
+            <path d="M26 132 L45 119 L57 91 Q63 83 82 84 L111 88 Q128 91 139 111 L159 119 L183 124 L182 137 L162 141 L145 145 L39 151 L20 145Z" fill="#df302b" stroke="#762522" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M56 119 L68 96 Q74 91 87 93 L107 96 L119 117Z" fill="#9fd7ec" stroke="#304b5e" stroke-width="3"/><path d="M87 94 L92 118" stroke="#304b5e" stroke-width="2"/><path d="M113 119 L140 119 L151 129 L112 132Z" fill="#f3e8d1" stroke="#762522" stroke-width="2"/><path d="M23 129 L42 128 L39 151 L20 145Z" fill="#f3e8d1"/><path d="M32 119 V107 H49 V121 M158 111 V82 H169 V111" fill="#252e37" stroke="#171f26" stroke-width="3"/><path d="M145 80 H188 L184 88 H147Z" fill="#df302b" stroke="#762522" stroke-width="2.5"/><path d="M151 82 H182" stroke="#fff" stroke-width="2"/><circle cx="48" cy="145" r="17" fill="#222a31" stroke="#b7c0c8" stroke-width="4"/><circle cx="48" cy="145" r="7" fill="#677783"/><circle cx="148" cy="139" r="17" fill="#222a31" stroke="#b7c0c8" stroke-width="4"/><circle cx="148" cy="139" r="7" fill="#677783"/><path d="M72 87 L74 77 H110 L114 91" fill="#242d35" stroke="#151c22" stroke-width="3"/><path d="M66 119 L93 124 L108 119" fill="none" stroke="#fff" stroke-width="3"/><text x="92" y="137" font-size="12" font-weight="900" text-anchor="middle" fill="#fff">${ch(15)?'2':'7'}</text><path d="M155 112 L178 112" stroke="#fff" stroke-width="4"/>`;
+            if(ch(0)) scene += `<path d="M56 119 L68 96 Q74 91 87 93 L107 96 L119 117Z" fill="#b7e8f7" stroke="#304b5e" stroke-width="3"/>`;
+            if(ch(1)) scene += `<path d="M151 119 L177 119" stroke="#df302b" stroke-width="5"/>`;
+          } else if (theme === 'penguin') {
+            // まるくて愛らしい親ペンギンと子ペンギン。2羽だけ、足元は同じ高さ。
+            scene = `<rect width="200" height="200" rx="12" fill="#dff4ff"/><circle cx="28" cy="30" r="15" fill="#fff" opacity=".8"/><circle cx="170" cy="44" r="20" fill="#fff" opacity=".8"/><path d="M0 151 Q42 143 85 151 T200 150 V200 H0Z" fill="#fff"/><path d="M0 180 Q50 174 100 180 T200 179" fill="none" stroke="#b9e2f3" stroke-width="3"/>
+            <g stroke="#263746" stroke-width="2.5" stroke-linejoin="round">
+              <g transform="translate(7 0)">
+                <ellipse cx="57" cy="111" rx="43" ry="53" fill="#344b60"/><circle cx="57" cy="67" r="34" fill="#344b60"/>
+                <ellipse cx="57" cy="119" rx="30" ry="39" fill="#fffdf6" stroke="none"/><ellipse cx="43" cy="73" rx="13" ry="16" fill="#fffdf6" stroke="none"/><ellipse cx="70" cy="73" rx="13" ry="16" fill="#fffdf6" stroke="none"/>
+                <ellipse cx="44" cy="73" rx="4.5" ry="6" fill="#263746" stroke="none"/><circle cx="45.5" cy="71" r="1.7" fill="#fff" stroke="none"/><ellipse cx="70" cy="73" rx="4.5" ry="6" fill="#263746" stroke="none"/><circle cx="71.5" cy="71" r="1.7" fill="#fff" stroke="none"/>
+                <ellipse cx="31" cy="87" rx="7" ry="4.5" fill="#f6a9ad" stroke="none"/><ellipse cx="83" cy="87" rx="7" ry="4.5" fill="#f6a9ad" stroke="none"/>
+                <path d="M50 84 Q57 79 64 84 L57 94Z" fill="#ffb52e" stroke="#c67a1b"/><path d="M21 111 Q8 128 24 145 Q31 148 35 140" fill="#344b60"/><path d="M92 111 Q107 128 91 145 Q84 148 80 140" fill="#344b60"/>
+                <ellipse cx="42" cy="164" rx="15" ry="6" fill="#ffb52e" stroke="#c67a1b"/><ellipse cx="72" cy="164" rx="15" ry="6" fill="#ffb52e" stroke="#c67a1b"/>
+                <path d="M33 119 Q57 133 81 119" fill="none" stroke="#e8e5dc" stroke-width="2"/>
+              </g>
+              <g transform="translate(112 65) scale(.62)">
+                <ellipse cx="57" cy="111" rx="43" ry="53" fill="#71899a"/><circle cx="57" cy="67" r="34" fill="#71899a"/>
+                <ellipse cx="57" cy="119" rx="30" ry="39" fill="#fffdf6" stroke="none"/><ellipse cx="43" cy="73" rx="13" ry="16" fill="#fffdf6" stroke="none"/><ellipse cx="70" cy="73" rx="13" ry="16" fill="#fffdf6" stroke="none"/>
+                <ellipse cx="44" cy="73" rx="4.5" ry="6" fill="#263746" stroke="none"/><circle cx="45.5" cy="71" r="1.7" fill="#fff" stroke="none"/><ellipse cx="70" cy="73" rx="4.5" ry="6" fill="#263746" stroke="none"/><circle cx="71.5" cy="71" r="1.7" fill="#fff" stroke="none"/>
+                <ellipse cx="31" cy="87" rx="7" ry="4.5" fill="#f6a9ad" stroke="none"/><ellipse cx="83" cy="87" rx="7" ry="4.5" fill="#f6a9ad" stroke="none"/>
+                <path d="M50 84 Q57 79 64 84 L57 94Z" fill="#ffb52e" stroke="#c67a1b"/><path d="M21 111 Q8 128 24 145 Q31 148 35 140" fill="#71899a"/><path d="M92 111 Q107 128 91 145 Q84 148 80 140" fill="#71899a"/>
+                <ellipse cx="42" cy="164" rx="15" ry="6" fill="#ffb52e" stroke="#c67a1b"/><ellipse cx="72" cy="164" rx="15" ry="6" fill="#ffb52e" stroke="#c67a1b"/>
+              </g>
+            </g>`;
+            if(ch(0)) scene += `<path d="M37 67 Q43 62 49 67" fill="none" stroke="#263746" stroke-width="2.5" stroke-linecap="round"/>`;
+            if(ch(1)) scene += `<path d="M50 84 Q57 79 64 84 L57 99Z" fill="#ffb52e" stroke="#c67a1b" stroke-width="2"/>`;
+            if(ch(2)) scene += `<ellipse cx="42" cy="164" rx="18" ry="6" fill="#ffb52e" stroke="#c67a1b" stroke-width="2"/>`;
+          } else { // なつまつり：提灯の模様、背景の花火、金魚の色を自然な差分に
+            scene += `<rect width="200" height="200" rx="12" fill="#142b59"/><circle cx="29" cy="38" r="1.5" fill="#fff3c4"/><circle cx="171" cy="25" r="1.5" fill="#fff3c4"/><g stroke="${ch(12)?'#f5a7d5':'#f5cf68'}" stroke-width="1.5" fill="none"><path d="M150 22 L150 8 M150 22 L138 12 M150 22 L163 11 M150 22 L137 27 M150 22 L164 30 M150 22 L150 39"/><circle cx="150" cy="22" r="12"/><path d="M30 42 L30 30 M30 42 L20 34 M30 42 L40 34 M30 42 L20 49 M30 42 L40 50"/></g>
+            <path d="M0 62 Q100 73 200 60" fill="none" stroke="#e6cba1" stroke-width="2.5"/><g stroke="#9c4937" stroke-width="1.5"><path d="M20 58 V65 M58 61 V68 M96 63 V70 M134 62 V69 M172 58 V65"/><path d="M10 72 Q20 61 30 72 Q33 82 30 89 Q20 99 10 89 Q7 82 10 72Z" fill="#f5a65d"/><path d="M46 75 Q58 63 70 75 Q73 85 70 92 Q58 102 46 92 Q43 85 46 75Z" fill="#f5a65d"/><path d="M84 77 Q96 65 108 77 Q111 87 108 94 Q96 104 84 94 Q81 87 84 77Z" fill="#f5a65d"/><path d="M122 76 Q134 64 146 76 Q149 86 146 93 Q134 103 122 93 Q119 86 122 76Z" fill="#f5a65d"/><path d="M160 72 Q172 60 184 72 Q187 82 184 89 Q172 99 160 89 Q157 82 160 72Z" fill="#f5a65d"/></g>
+            <g fill="none" stroke="#b85b3f" stroke-width="2"><path d="M16 76 Q20 81 24 76 M54 79 Q58 84 62 79 M92 81 Q96 86 100 81 M130 80 Q134 85 138 80 M168 76 Q172 81 176 76"/></g>
+            <path d="M5 112 L195 112 L195 187 Q100 197 5 187Z" fill="#e8a55b" stroke="#9d633d" stroke-width="3"/><path d="M5 119 H195" stroke="#fff0cb" stroke-width="5"/><rect x="11" y="126" width="178" height="59" rx="4" fill="#3cafd0" stroke="#237f9b" stroke-width="2.5"/><path d="M14 145 Q40 138 65 145 T115 145 T186 145 M14 166 Q40 159 65 166 T115 166 T186 166" fill="none" stroke="#a4e5f1" stroke-width="2"/>
+            <g><path d="M31 153 Q42 142 54 153 Q43 163 31 153Z" fill="${ch(17)?'#293a50':'#f07843'}" stroke="#963d2c" stroke-width="1.5"/><path d="M54 153 L62 147 L62 159Z" fill="#f5c35c"/><circle cx="39" cy="151" r="1.7" fill="#182d40"/><path d="M83 174 Q94 163 106 174 Q95 184 83 174Z" fill="${ch(18)?'#f4cf4e':'#f07843'}" stroke="#963d2c" stroke-width="1.5"/><path d="M106 174 L114 168 L114 180Z" fill="#f5c35c"/><circle cx="91" cy="172" r="1.7" fill="#182d40"/><path d="M135 153 Q146 142 158 153 Q147 163 135 153Z" fill="#f07843" stroke="#963d2c" stroke-width="1.5"/><path d="M158 153 L166 147 L166 159Z" fill="#f5c35c"/><circle cx="143" cy="151" r="1.7" fill="#182d40"/></g>`;
+            if(ch(0)) scene += `<path d="M16 76 Q20 69 24 76" fill="none" stroke="#b85b3f" stroke-width="2"/>`;
+            if(ch(1)) scene += `<path d="M54 79 L58 73 L62 79" fill="none" stroke="#b85b3f" stroke-width="2"/>`;
+          }
+          // 出題用の差分は、毎回オリジナル絵から描き直して1か所だけ加える。
+          // これにより、以前の差分が重なったり、同じ絵が複数できたりしない。
+          if (!original && n >= 0) {
+            scene = drawIllustration(theme, { isOriginal: true }, false).match(/<svg[^>]*>([\s\S]*)<\/svg>/)[1];
+            const oneSpot = (markup) => { scene += markup; };
+            if (theme === 'dinosaur') {
+              const variants = [
+                `<path d="M162 69 Q168 62 174 69" fill="none" stroke="#315f5a" stroke-width="2.8" stroke-linecap="round"/>`,
+                `<circle cx="165" cy="72" r="4.6" fill="#263238"/><circle cx="166" cy="71" r="1.2" fill="#fff"/>`,
+                `<circle cx="164" cy="82" r="6" fill="none" stroke="#315f5a" stroke-width="2.5"/>`, // 頭の横に中抜きの丸模様を追加
+                `<path d="M151 57 Q157 49 163 56" fill="none" stroke="#315f5a" stroke-width="3.5" stroke-linecap="round"/>`,
+                `<circle cx="65" cy="145" r="7" fill="none" stroke="#315f5a" stroke-width="2.5"/>`,
+                `<ellipse cx="65" cy="145" rx="5" ry="7" fill="none" stroke="#315f5a" stroke-width="2.5"/>`,
+                `<ellipse cx="81" cy="145" rx="5" ry="7" fill="none" stroke="#315f5a" stroke-width="2.5"/>`,
+                `<ellipse cx="98" cy="153" rx="5" ry="7" fill="none" stroke="#315f5a" stroke-width="2.5"/>`,
+                `<ellipse cx="117" cy="158" rx="5" ry="7" fill="none" stroke="#315f5a" stroke-width="2.5"/>`,
+                `<ellipse cx="139" cy="144" rx="5" ry="7" fill="none" stroke="#315f5a" stroke-width="2.5"/>`,
+                `<path d="M25 145 Q35 138 45 146" fill="none" stroke="#b7a274" stroke-width="3"/>`,
+                `<path d="M25 154 Q35 147 45 155" fill="none" stroke="#d6c39a" stroke-width="3"/>`,
+                `<circle cx="29" cy="153" r="3" fill="#b7a274"/>`,
+                `<path d="M22 160 Q35 151 48 160" fill="none" stroke="#b7a274" stroke-width="3"/>`,
+                `<path d="M24 145 L29 150 L24 155 M36 145 L41 150 L36 155" fill="none" stroke="#d6c39a" stroke-width="2.5"/>`,
+                `<path d="M152 93 Q162 98 175 91" fill="none" stroke="#315f5a" stroke-width="3"/>`,
+                `<path d="M35 132 L35 123" stroke="#b7a274" stroke-width="3"/>`,
+                `<ellipse cx="81" cy="145" rx="6" ry="8" fill="none" stroke="#315f5a" stroke-width="2.5"/>`,
+                `<ellipse cx="117" cy="158" rx="6" ry="8" fill="none" stroke="#315f5a" stroke-width="2.5"/>`,
+                `<path d="M158 104 L163 109 L158 114" fill="none" stroke="#315f5a" stroke-width="2.5"/>`
+              ];
+              oneSpot(variants[n % variants.length]);
+            } else if (theme === 'castle') {
+              const variants = [
+                `<path d="M47 47 V34 L57 39 L47 44" fill="#f4c95d" stroke="#8d403a" stroke-width="1.5"/>`,
+                `<path d="M100 20 V7 L112 12 L100 17" fill="#f4c95d" stroke="#8d403a" stroke-width="1.5"/>`,
+                `<path d="M153 47 V34 L164 39 L153 44" fill="#f4c95d" stroke="#8d403a" stroke-width="1.5"/>`,
+                `<path d="M47 34 L57 39 L47 44Z" fill="#fff0a8" stroke="#8d403a" stroke-width="1.5"/>`,
+                `<path d="M100 7 L112 12 L100 17Z" fill="#fff0a8" stroke="#8d403a" stroke-width="1.5"/>`,
+                `<path d="M153 34 L164 39 L153 44Z" fill="#fff0a8" stroke="#8d403a" stroke-width="1.5"/>`,
+                `<path d="M83 169 V148 Q83 126 100 126 Q117 126 117 148 V169Z" fill="#7e5138" stroke="#68412f" stroke-width="2.5"/>`,
+                `<path d="M83 169 V143 Q83 124 100 124 Q117 124 117 143 V169Z" fill="#7e5138" stroke="#68412f" stroke-width="2.5"/><path d="M89 169 V146 Q100 134 111 146 V169Z" fill="#f0d2a4"/>`,
+                `<path d="M89 169 V148 Q100 137 111 148 V169Z" fill="#a16b48" stroke="#68412f" stroke-width="2"/>`,
+                `<rect x="79" y="108" width="12" height="13" rx="3" fill="#8bcde8" stroke="#6e8c9c" stroke-width="1.5"/>`,
+                `<rect x="95" y="82" width="12" height="15" rx="3" fill="#8bcde8" stroke="#6e8c9c" stroke-width="1.5"/>`,
+                `<rect x="154" y="108" width="12" height="13" rx="3" fill="#8bcde8" stroke="#6e8c9c" stroke-width="1.5"/>`,
+                `<rect x="39" y="108" width="6" height="13" rx="3" fill="#8bcde8" stroke="#6e8c9c" stroke-width="1.5"/>`,
+                `<rect x="79" y="108" width="8" height="9" rx="3" fill="#8bcde8" stroke="#6e8c9c" stroke-width="1.5"/>`,
+                `<rect x="154" y="108" width="8" height="8" rx="3" fill="#8bcde8" stroke="#6e8c9c" stroke-width="1.5"/>`,
+                `<path d="M26 85 L47 51 L68 85Z" fill="#4d8fca" stroke="#28557f" stroke-width="2.5"/>`,
+                `<path d="M66 60 L100 28 L134 60Z" fill="#4d8fca" stroke="#28557f" stroke-width="2.5"/>`,
+                `<path d="M132 85 L153 52 L174 85Z" fill="#4d8fca" stroke="#28557f" stroke-width="2.5"/>`,
+                `<path d="M47 47 V34 L57 39 L47 44Z" fill="#d94d43" stroke="#8d403a" stroke-width="1.5"/><path d="M100 20 V7 L112 12 L100 17" fill="#d94d43" stroke="#8d403a" stroke-width="1.5"/>`,
+                `<path d="M18 84 H76 V92 H18Z" fill="#f0d9b4" stroke="#9b9b91" stroke-width="2"/>`
+              ];
+              oneSpot(variants[n % variants.length]);
+            } else if (theme === 'bakery') {
+              // 添付版のおかしやさん：色・位置・形を元の菓子そのものに反映する。
+              const variants = [
+                s=>s.replace('fill="#e75b4f"','fill="#f1c65d"'),
+                s=>s.replace('fill="#f1c65d"','fill="#7bb5d9"'),
+                s=>s.replace('fill="#fff2d7"','fill="#f7b4bc"'),
+                s=>s.replace('fill="#f2a4b4"','fill="#8ebd78"'),
+                s=>s.replace('fill="#815038" stroke="#593a2c"','fill="#d85d58" stroke="#9d633b"'),
+                s=>s.replace('fill="#e9b4c2"','fill="#f1c65d"'),
+                s=>s.replace('fill="#e8a34f"','fill="#7bb5d9"'),
+                s=>s.replace('fill="#7bb5d9" stroke="#4b84a4"','fill="#f2a4b4" stroke="#ad6174"'),
+                s=>s.replace('cx="48" cy="56"','cx="43" cy="56"'),
+                s=>s.replace('cx="107" cy="55"','cx="112" cy="55"'),
+                s=>s.replace('cx="164" cy="55"','cx="169" cy="55"'),
+                s=>s.replace('cx="39" cy="111"','cx="44" cy="111"'),
+                s=>s.replace('cx="92" cy="123"','cx="97" cy="123"'),
+                s=>s.replace('cx="145" cy="111"','cx="150" cy="111"'),
+                s=>s.replace('ellipse cx="39" cy="168" rx="18"','ellipse cx="45" cy="168" rx="18"'),
+                s=>s.replace('ellipse cx="39" cy="168" rx="18" ry="11"','ellipse cx="39" cy="168" rx="14" ry="8"'),
+                s=>s.replace('ellipse cx="39" cy="168" rx="7" ry="4"','ellipse cx="39" cy="168" rx="4" ry="2.5"'),
+                s=>s.replace('M74 180 L83 157 H111 L120 180Z','M74 180 L80 163 Q97 151 114 163 L120 180Z'),
+                s=>s.replace('M139 180 Q139 158 158 158 Q177 158 177 180Z','M136 180 Q136 151 158 151 Q180 151 180 180Z'),
+                s=>s.replace('M20 135 Q20 112 39 112 Q58 112 58 135Z','M16 135 Q16 108 39 108 Q62 108 62 135Z')
+              ];
+              scene = variants[n % variants.length](scene);
+            } else if (theme === 'ocean') {
+              const variants = [
+                `<circle cx="72" cy="55" r="4.5" fill="#172f46"/>`,
+                `<path d="M65 66 Q72 71 78 66" fill="none" stroke="#172f46" stroke-width="2.8"/>`,
+                `<path d="M88 57 Q102 47 108 39 Q111 55 101 66Z" fill="#55b7e8" stroke="#245d80" stroke-width="2.4"/>`,
+                `<path d="M145 93 L145 128" stroke="#e4c16d" stroke-width="3"/>`,
+                `<path d="M125 105 L138 111 L128 123" fill="none" stroke="#e4c16d" stroke-width="3"/>`,
+                `<path d="M165 105 L152 111 L162 123" fill="none" stroke="#e4c16d" stroke-width="3"/>`,
+                `<path d="M16 137 L5 127 L5 147Z" fill="#ffd34e" stroke="#245d80" stroke-width="2"/>`,
+                `<path d="M29 126 Q35 137 29 149" fill="none" stroke="#fff8e8" stroke-width="6"/>`,
+                `<path d="M43 127 Q49 137 43 147" fill="none" stroke="#fff8e8" stroke-width="6"/>`,
+                `<path d="M76 165 Q67 174 73 181 Q79 185 84 176" fill="none" stroke="#a83e68" stroke-width="3.5" stroke-linecap="round"/>`,
+                `<path d="M87 169 Q87 181 94 182 Q101 181 99 168" fill="none" stroke="#a83e68" stroke-width="3.5" stroke-linecap="round"/>`,
+                `<path d="M103 168 Q110 180 117 173" fill="none" stroke="#a83e68" stroke-width="3.5" stroke-linecap="round"/>`,
+                `<path d="M29 126 Q35 137 29 149" fill="none" stroke="#fff8e8" stroke-width="2.5"/>`,
+                `<path d="M43 127 Q49 137 43 147" fill="none" stroke="#fff8e8" stroke-width="2.5"/>`,
+                `<path d="M164 112 Q176 111 179 116 Q176 124 165 122Z" fill="#72c85f" stroke="#69c96b" stroke-width="2.4"/>`,
+                `<path d="M76 165 Q67 174 73 181 Q79 185 84 176 L87 169 Q87 181 94 182 Q101 181 99 168 Q103 180 110 177 Q117 173 110 162" fill="#f06b91" stroke="#f06b91" stroke-width="4" stroke-linecap="round"/>`,
+                `<path d="M170 120 Q174 124 178 120" fill="none" stroke="#72c85f" stroke-width="3.5"/>`,
+                `<path d="M88 57 Q102 47 108 39 Q111 55 101 66Z" fill="#348ec7" stroke="#245d80" stroke-width="2.4"/>`,
+                `<path d="M44 37 Q39 29 44 24" fill="none" stroke="#e9fbff" stroke-width="4" stroke-linecap="round"/>`,
+                `<path d="M44 31 Q51 27 53 21" fill="none" stroke="#e9fbff" stroke-width="4" stroke-linecap="round"/>`,
+                `<path d="M68 55 Q72 50 76 55" fill="none" stroke="#172f46" stroke-width="2.8" stroke-linecap="round"/>`,
+                `<circle cx="72" cy="55" r="5.2" fill="#172f46" stroke="#172f46" stroke-width="1"/>`,
+                `<path d="M91 161 Q96 165 101 161" fill="none" stroke="#f06b91" stroke-width="5"/>`,
+                `<path d="M91 161 Q96 165 101 161" fill="none" stroke="#f06b91" stroke-width="4"/>`,
+                `<path d="M29 126 Q35 137 29 149" fill="none" stroke="#fff8e8" stroke-width="2"/>`,
+                `<path d="M43 127 Q49 137 43 147" fill="none" stroke="#fff8e8" stroke-width="2"/>`
+              ];
+              oneSpot(variants[n % variants.length]);
+            } else if (theme === 'racing') {
+              const variants = [
+                `<path d="M145 80 H188 L184 88 H147Z" fill="#2677cc" stroke="#762522" stroke-width="2.5"/>`,
+                `<path d="M151 82 H182" stroke="#f5d25c" stroke-width="3"/>`,
+                `<circle cx="48" cy="145" r="5" fill="#f5d25c"/>`,
+                `<circle cx="148" cy="139" r="5" fill="#f5d25c"/>`,
+                `<circle cx="48" cy="145" r="3" fill="#e7edf0"/>`,
+                `<circle cx="148" cy="139" r="3" fill="#e7edf0"/>`,
+                `<path d="M0 161 L200 145" stroke="#f8f4e9" stroke-width="4" stroke-dasharray="8 19"/>`,
+                `<path d="M0 161 L200 145" stroke="#f8f4e9" stroke-width="4" stroke-dasharray="19 8"/>`,
+                `<path d="M18 50 H46 V84 H18Z" fill="#fff" stroke="#263b4b" stroke-width="2"/><path d="M18 50 H32 V67 H18" fill="#263b4b"/>`,
+                `<path d="M18 50 H46 V84 H18Z" fill="#fff" stroke="#263b4b" stroke-width="2"/><path d="M32 67 H46 V84 H32" fill="#263b4b"/>`,
+                `<path d="M23 129 L42 128 L39 151 L20 145Z" fill="#f7d56a" stroke="#762522" stroke-width="1.5"/>`,
+                `<path d="M113 119 L140 119 L151 129 L112 132Z" fill="#f7d56a" stroke="#762522" stroke-width="2"/>`,
+                `<path d="M32 119 V107 H49 V121" fill="none" stroke="#f5d25c" stroke-width="4"/>`,
+                `<path d="M158 111 V82 H169 V111" fill="none" stroke="#f5d25c" stroke-width="4"/>`,
+                `<path d="M86 94 L93 94 L98 118 L91 118Z" fill="#b7e8f7" stroke="#b7e8f7" stroke-width="1"/>`,
+                `<text x="92" y="137" font-size="12" font-weight="900" text-anchor="middle" fill="#fff">2</text>`,
+                `<text x="92" y="137" font-size="12" font-weight="900" text-anchor="middle" fill="#fff">3</text>`,
+                `<path d="M0 188 L200 172" stroke="#f8f4e9" stroke-width="5" stroke-dasharray="15 12"/>`,
+                `<path d="M32 67 H46 V84 H32Z" fill="#fff" stroke="#263b4b" stroke-width="1.5"/>`
+              ];
+              oneSpot(variants[n % variants.length]);
+            } else if (theme === 'penguin') {
+              // 親か子の1か所だけを変更。顔・くちばし・足など、押す場所が明確な差分。
+              const variants = [
+                `<path d="M51 73 Q57 79 63 73" fill="none" stroke="#263746" stroke-width="3" stroke-linecap="round"/>`,
+                `<path d="M76 73 Q82 79 88 73" fill="none" stroke="#263746" stroke-width="3" stroke-linecap="round"/>`,
+                `<circle cx="52" cy="72" r="3.8" fill="#263746"/><circle cx="78" cy="72" r="3.8" fill="#263746"/>`,
+                `<circle cx="53.5" cy="71" r="1.7" fill="#263746"/><circle cx="79.5" cy="71" r="1.7" fill="#263746"/>`,
+                `<path d="M57 84 Q64 80 71 84 L64 94Z" fill="#ff8b45" stroke="#c67a1b" stroke-width="2"/>`,
+                `<path d="M56 83 Q64 81 72 83 L64 96Z" fill="#ffffff" stroke="#ffffff" stroke-width="3"/>`,
+                `<path d="M57 84 Q64 79 71 84 L64 94Z" fill="#f06b35" stroke="#9e4c20" stroke-width="2"/>`,
+                `<ellipse cx="49" cy="164" rx="15" ry="6" fill="#e65b43" stroke="#9e4c20" stroke-width="2"/>`,
+                `<ellipse cx="79" cy="164" rx="15" ry="6" fill="#e65b43" stroke="#9e4c20" stroke-width="2"/>`,
+                `<ellipse cx="49" cy="164" rx="19" ry="6" fill="#ffb52e" stroke="#c67a1b" stroke-width="2"/>`,
+                `<path d="M21 111 Q8 128 24 145 Q31 148 35 140" fill="#263746" stroke="#263746" stroke-width="2"/>`,
+                `<path d="M92 111 Q107 128 91 145 Q84 148 80 140" fill="#263746" stroke="#263746" stroke-width="2"/>`,
+                `<ellipse cx="31" cy="87" rx="9" ry="7" fill="#f6a9ad"/>`,
+                `<ellipse cx="83" cy="87" rx="9" ry="7" fill="#f6a9ad"/>`,
+                `<path d="M33 119 Q57 133 81 119" fill="none" stroke="#c9dbe4" stroke-width="4"/>`,
+                `<path d="M33 119 Q57 133 81 119" fill="none" stroke="#344b60" stroke-width="3"/>`,
+                `<path d="M57 84 Q64 80 71 84 L64 94Z" fill="#ffffff" stroke="#ffffff" stroke-width="3"/>`,
+                `<path d="M137 111 Q146 101 155 111 L146 128Z" fill="#f06b35" stroke="#9e4c20" stroke-width="2.5"/>`,
+                `<ellipse cx="139" cy="166" rx="13" ry="6" fill="#f06b35" stroke="#9e4c20" stroke-width="2"/>`,
+                `<path d="M133 119 Q146 136 159 119" fill="none" stroke="#71899a" stroke-width="5" stroke-linecap="round"/>`
+              ];
+              oneSpot(variants[n % variants.length]);
+            } else if (theme === 'festival') {
+              const variants = [
+                `<path d="M150 22 L150 8 M150 22 L138 12 M150 22 L163 11 M150 22 L137 27 M150 22 L164 30 M150 22 L150 39" stroke="#f5a7d5" stroke-width="2.5" fill="none"/>`,
+                `<path d="M30 42 L30 30 M30 42 L20 34 M30 42 L40 34 M30 42 L20 49 M30 42 L40 50" stroke="#f5a7d5" stroke-width="2.5" fill="none"/>`,
+                `<path d="M10 72 Q20 61 30 72 Q33 82 30 89 Q20 99 10 89 Q7 82 10 72Z" fill="#f5a65d" stroke="#9c4937" stroke-width="1.5"/>`,
+                `<path d="M46 75 Q58 63 70 75 Q73 85 70 92 Q58 102 46 92 Q43 85 46 75Z" fill="#f4cf4e" stroke="#9c4937" stroke-width="1.5"/>`,
+                `<path d="M84 77 Q96 65 108 77 Q111 87 108 94 Q96 104 84 94 Q81 87 84 77Z" fill="#f4cf4e" stroke="#9c4937" stroke-width="1.5"/>`,
+                `<path d="M122 76 Q134 64 146 76 Q149 86 146 93 Q134 103 122 93 Q119 86 122 76Z" fill="#f4cf4e" stroke="#9c4937" stroke-width="1.5"/>`,
+                `<path d="M160 72 Q172 60 184 72 Q187 82 184 89 Q172 99 160 89 Q157 82 160 72Z" fill="#f4cf4e" stroke="#9c4937" stroke-width="1.5"/>`,
+                `<path d="M54 153 L62 147 L62 159Z" fill="#293a50" stroke="#963d2c" stroke-width="1.5"/>`,
+                `<path d="M106 174 L114 168 L114 180Z" fill="#293a50" stroke="#963d2c" stroke-width="1.5"/>`,
+                `<path d="M158 153 L166 147 L166 159Z" fill="#293a50" stroke="#963d2c" stroke-width="1.5"/>`,
+                `<path d="M31 153 Q42 142 54 153 Q43 163 31 153Z" fill="#f4cf4e" stroke="#963d2c" stroke-width="1.5"/>`,
+                `<path d="M83 174 Q94 163 106 174 Q95 184 83 174Z" fill="#f4cf4e" stroke="#963d2c" stroke-width="1.5"/>`,
+                `<path d="M135 153 Q146 142 158 153 Q147 163 135 153Z" fill="#f4cf4e" stroke="#963d2c" stroke-width="1.5"/>`,
+                `<circle cx="20" cy="80" r="3" fill="#fff0cb"/>`,
+                `<circle cx="58" cy="83" r="3" fill="#fff0cb"/>`,
+                `<circle cx="96" cy="85" r="3" fill="#fff0cb"/>`,
+                `<circle cx="134" cy="84" r="3" fill="#fff0cb"/>`,
+                `<circle cx="172" cy="80" r="3" fill="#fff0cb"/>`,
+                `<path d="M31 153 Q42 142 54 153 Q43 163 31 153Z" fill="#f07843" stroke="#963d2c" stroke-width="1.5"/>`,
+                `<path d="M135 153 Q146 142 158 153 Q147 163 135 153Z" fill="#293a50" stroke="#963d2c" stroke-width="1.5"/>`
+              ];
+              oneSpot(variants[n % variants.length]);
+            }
+          }
+          // 余分な生き物の描き足しは行わず、テーマ本来の絵を保つ。
+          // 差分は上の一覧から1か所だけ加える。
+          const spot = config.spot || {cx:100,cy:100,r:18};
+          const red = (showRedCircle && !original) ? `<circle cx="${spot.cx}" cy="${spot.cy}" r="${spot.r+4}" fill="none" stroke="#ef4444" stroke-width="4"/>` : '';
+          return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="w-full h-full select-none" preserveAspectRatio="xMidYMid meet">${scene}${red}</svg>`;
+        }
+
+        // 1. DOLPHIN
+        function renderDolphin(isOriginal, diffType) {
+            let parentColor1 = "#0284c7", parentColor2 = "#38bdf8", childColor = "#7dd3fc";
+            let parentEye = "happy", ballColor = "#f43f5e", sunColor = "#fbbf24";
+            let bubbleTop = "circle", bubbleMid = "#ffffff", bubbleLow = "circle";
+            let finColor = parentColor1, tailColor = parentColor1, ballStyle = "stripe";
+            let parentFinPath = "M 88 95 C 92 78 106 80 102 98 Z";
+            let seaGrad = ["#38bdf8", "#0284c7"], sunRays = false, parentBelly = "#f0f9ff";
+            let parentBlush = true, childEye = "normal", parentMouth = "closed";
+            let skyGrad = ["#e0f2fe", "#bae6fd"], childFin = true, ballType = "ball";
+
+            if (!isOriginal) {
+                switch(diffType) {
+                    case 'parent_color': parentColor1 = "#8b5cf6"; parentColor2 = "#a78bfa"; break;
+                    case 'parent_eye': parentEye = "wink"; break;
+                    case 'bubble_top': bubbleTop = "star"; break;
+                    case 'ball_color': ballColor = "#10b981"; break;
+                    case 'sun_color': sunColor = "#f97316"; break;
+                    case 'child_color': childColor = "#f472b6"; break;
+                    case 'parent_fin': finColor = "#f59e0b"; break;
+                    case 'parent_fin_up': parentFinPath = "M 88 95 C 86 65 108 65 102 98 Z"; break;
+                    case 'parent_fin_down': parentFinPath = "M 88 95 C 95 112 112 108 102 98 Z"; break;
+                    case 'parent_fin_left': parentFinPath = "M 88 95 C 68 80 70 101 102 98 Z"; break;
+                    case 'parent_fin_right': parentFinPath = "M 88 95 C 106 74 120 86 102 98 Z"; break;
+                    case 'parent_tail': tailColor = "#ec4899"; break;
+                    case 'ball_stripe': ballStyle = "dots"; break;
+                    case 'sea_color': seaGrad = ["#1e3a8a", "#0f172a"]; break;
+                    case 'sun_rays': sunRays = true; break;
+                    case 'bubble_mid': bubbleMid = "#fde047"; break;
+                    case 'parent_belly': parentBelly = "#fde047"; break;
+                    case 'parent_blush': parentBlush = false; break;
+                    case 'child_eye': childEye = "happy"; break;
+                    case 'bubble_low': bubbleLow = "heart"; break;
+                    case 'parent_mouth': parentMouth = "open"; break;
+                    case 'sky_color': skyGrad = ["#fbcfe8", "#f472b6"]; break;
+                    case 'child_fin': childFin = false; break;
+                    case 'no_ball': ballType = "note"; break;
+                }
+            }
+
+            return `
+                <linearGradient id="skyDolph" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="${skyGrad[0]}"/>
+                    <stop offset="100%" stop-color="${skyGrad[1]}"/>
+                </linearGradient>
+                <linearGradient id="seaDolph" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="${seaGrad[0]}"/>
+                    <stop offset="100%" stop-color="${seaGrad[1]}"/>
+                </linearGradient>
+                <linearGradient id="dolphGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="${parentColor1}"/>
+                    <stop offset="100%" stop-color="${parentColor2}"/>
+                </linearGradient>
+            </defs>
+
+            <rect width="200" height="200" rx="16" fill="url(#skyDolph)"/>
+            <path d="M 0 125 Q 50 115 100 125 T 200 125 L 200 200 L 0 200 Z" fill="url(#seaDolph)"/>
+
+            <g filter="url(#shadow)">
+                <circle cx="168" cy="36" r="16" fill="${sunColor}"/>
+                ${sunRays ? `<path d="M 168 12 L 168 5 M 168 67 L 168 60 M 144 36 L 137 36 M 199 36 L 192 36" stroke="${sunColor}" stroke-width="3" stroke-linecap="round"/>` : ''}
+            </g>
+
+            ${ballType === 'ball' ? `
+                <g transform="translate(150, 80)" filter="url(#shadow)">
+                    <circle cx="0" cy="0" r="12" fill="${ballColor}"/>
+                    ${ballStyle === 'stripe' ? `<path d="M -12 0 A 12 12 0 0 1 12 0 Z" fill="#ffffff"/>` : `<circle cx="-4" cy="-4" r="3" fill="#ffffff"/><circle cx="4" cy="4" r="3" fill="#ffffff"/>`}
+                    <path d="M 0 -12 A 12 12 0 0 1 0 12 Z" fill="#f59e0b"/>
+                </g>
+            ` : `
+                <text x="140" y="85" font-size="22" filter="url(#shadow)">🎵</text>
+            `}
+
+            <g filter="url(#shadow)">
+                <path d="M 35 130 C 45 85 110 75 145 102 C 158 112 150 126 132 124 C 98 122 65 138 35 130 Z" fill="url(#dolphGrad)" stroke="#0369a1" stroke-width="2"/>
+                <path d="M 58 126 C 85 118 120 120 132 122 C 120 129 90 132 58 126 Z" fill="${parentBelly}"/>
+                ${diffType === 'parent_tail' ? `
+                    <path d="M 39 126 C 20 112 4 126 10 140 C 16 154 32 148 43 128 Z" fill="#ec4899" stroke="#9d174d" stroke-width="2.5"/>
+                    <path d="M 15 132 L 29 139" stroke="#fce7f3" stroke-width="2.5" stroke-linecap="round"/>
+                ` : `<path d="M 36 128 C 20 122 15 138 24 142 C 32 144 40 134 42 129 Z" fill="${tailColor}" stroke="#0369a1" stroke-width="2"/>`}
+                <path d="${parentFinPath}" fill="${finColor}" stroke="#0369a1" stroke-width="1.5"/>
+
+                ${parentEye === 'happy' ? `
+                    <circle cx="128" cy="104" r="4" fill="#0f172a"/>
+                    <circle cx="129.5" cy="102.5" r="1.5" fill="#ffffff"/>
+                ` : `
+                    <path d="M 124 105 Q 128 100 132 105" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                `}
+
+                ${parentMouth === 'open' ? `<ellipse cx="140" cy="112" rx="3" ry="4" fill="#0f172a"/>` : ''}
+                ${parentBlush ? `<circle cx="122" cy="111" r="4.5" fill="url(#blush)"/>` : ''}
+            </g>
+
+            <g transform="translate(-18, 22) scale(0.68)" filter="url(#shadow)">
+                <path d="M 35 130 C 45 85 110 75 145 102 C 158 112 150 126 132 124 C 98 122 65 138 35 130 Z" fill="${childColor}" stroke="#0284c7" stroke-width="2"/>
+                <path d="M 58 126 C 85 118 120 120 132 122 C 120 129 90 132 58 126 Z" fill="#ffffff"/>
+                ${childFin ? `<path d="M 88 95 C 92 78 106 80 102 98 Z" fill="${childColor}" stroke="#0284c7" stroke-width="1.5"/>` : ''}
+                ${childEye === 'normal' ? `<circle cx="128" cy="104" r="4" fill="#0f172a"/>` : `<path d="M 124 105 Q 128 100 132 105" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" fill="none"/>`}
+                <circle cx="122" cy="111" r="4.5" fill="url(#blush)"/>
+            </g>
+
+            <circle cx="112" cy="65" r="4" fill="${bubbleLow === 'heart' ? '#f43f5e' : '#ffffff'}" opacity="0.8"/>
+            <circle cx="124" cy="50" r="6" fill="${bubbleMid}" opacity="0.8"/>
+            ${bubbleTop === 'circle' ? `<circle cx="132" cy="38" r="4" fill="#ffffff" opacity="0.9"/>` : `<text x="126" y="42" font-size="10">⭐</text>`}
+            `;
+        }
+
+        // 2. ELEPHANT
+        function renderElephant(isOriginal, diffType) {
+            let b1 = "#ef4444", b2 = "#3b82f6", b3 = "#a855f7";
+            let showB3 = true, hatOn = true, hatColor = "#f59e0b";
+            let elephantColor = "#94a3b8", earInner = "#f472b6";
+            let trunkShape = "normal", eyeShape = "normal", stringStyle = "solid";
+            let legColor = elephantColor, blushStar = false, cloudSun = "cloud";
+            let hatPom = "#ef4444", showTail = false, bellyPattern = false;
+            let bgGrad = ["#fef3c7", "#fde68a"], spottedB1 = false, trunkApple = false;
+
+            if (!isOriginal) {
+                switch(diffType) {
+                    case 'balloon1_color': b1 = "#10b981"; break;
+                    case 'balloon2_color': b2 = "#f59e0b"; break;
+                    case 'balloon3_color': b3 = "#ec4899"; break;
+                    case 'no_balloon3': showB3 = false; break;
+                    case 'hat_color': hatColor = "#10b981"; break;
+                    case 'no_hat': hatOn = false; break;
+                    case 'elephant_color': elephantColor = "#6ee7b7"; legColor = "#6ee7b7"; break;
+                    case 'ear_inner': earInner = "#fde047"; break;
+                    case 'trunk_shape': trunkShape = "reverse"; break;
+                    case 'eye_shape': eyeShape = "wink"; break;
+                    case 'balloon_string': stringStyle = "dashed"; break;
+                    case 'leg_color': legColor = "#ffffff"; break;
+                    case 'blush_color': blushStar = true; break;
+                    case 'cloud_left': cloudSun = "sun"; break;
+                    case 'hat_pom': hatPom = "#3b82f6"; break;
+                    case 'tail_present': showTail = true; break;
+                    case 'belly_color': bellyPattern = true; break;
+                    case 'bg_color': bgGrad = ["#e0f2fe", "#bae6fd"]; break;
+                    case 'balloon_spotted': spottedB1 = true; break;
+                    case 'apple_trunk': trunkApple = true; break;
+                }
+            }
+
+            return `
+                <linearGradient id="bgEl" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="${bgGrad[0]}"/>
+                    <stop offset="100%" stop-color="${bgGrad[1]}"/>
+                </linearGradient>
+            </defs>
+            <rect width="200" height="200" rx="16" fill="url(#bgEl)"/>
+
+            ${cloudSun === 'cloud' ? `
+                <path d="M 15 45 Q 25 30 40 35 Q 55 25 70 40 L 10 40 Z" fill="#ffffff" opacity="0.8"/>
+            ` : `
+                <circle cx="40" cy="35" r="14" fill="#fbbf24"/>
+            `}
+
+            <path d="M 45 50 Q 60 90 95 118" stroke="#64748b" stroke-width="1.5" stroke-dasharray="${stringStyle === 'dashed' ? '3 3' : 'none'}" fill="none"/>
+            <path d="M 68 38 Q 75 80 95 118" stroke="#64748b" stroke-width="1.5" fill="none"/>
+            ${showB3 ? `<path d="M 88 52 Q 88 88 95 118" stroke="#64748b" stroke-width="1.5" fill="none"/>` : ''}
+
+            <g filter="url(#shadow)">
+                <circle cx="45" cy="45" r="16" fill="${b1}"/>
+                ${spottedB1 ? `<circle cx="40" cy="40" r="3" fill="#ffffff"/><circle cx="50" cy="48" r="2" fill="#ffffff"/>` : ''}
+                <circle cx="68" cy="34" r="18" fill="${b2}"/>
+                ${showB3 ? `<circle cx="88" cy="48" r="14" fill="${b3}"/>` : ''}
+            </g>
+
+            <g filter="url(#shadow)">
+                ${showTail ? `<path d="M 155 140 Q 170 145 165 155" stroke="#475569" stroke-width="2" fill="none"/>` : ''}
+                <rect x="95" y="152" width="14" height="26" rx="7" fill="${legColor}" stroke="#475569" stroke-width="1.5"/>
+                <rect x="128" y="152" width="14" height="26" rx="7" fill="${legColor}" stroke="#475569" stroke-width="1.5"/>
+                <ellipse cx="120" cy="138" rx="40" ry="32" fill="${elephantColor}" stroke="#475569" stroke-width="2"/>
+                ${bellyPattern ? `<ellipse cx="120" cy="142" rx="22" ry="18" fill="#f8fafc"/>` : ''}
+
+                <circle cx="95" cy="112" r="28" fill="${elephantColor}" stroke="#475569" stroke-width="2"/>
+                <ellipse cx="118" cy="108" rx="16" ry="20" fill="${elephantColor}" stroke="#475569" stroke-width="2"/>
+                <ellipse cx="118" cy="108" rx="11" ry="14" fill="${earInner}"/>
+
+                ${trunkShape === 'normal' ? `
+                    <path d="M 78 118 C 58 118 52 98 68 93 C 74 91 74 100 66 102 C 58 106 66 113 78 113 Z" fill="${elephantColor}" stroke="#475569" stroke-width="1.5"/>
+                ` : `
+                    <path d="M 78 118 C 58 118 52 138 68 133 C 74 131 74 120 66 122 C 58 126 66 113 78 113 Z" fill="${elephantColor}" stroke="#475569" stroke-width="1.5"/>
+                `}
+
+                ${trunkApple ? `<text x="50" y="95" font-size="14">🍎</text>` : ''}
+
+                ${eyeShape === 'normal' ? `
+                    <circle cx="85" cy="105" r="3.5" fill="#0f172a"/>
+                    <circle cx="86.5" cy="103.5" r="1.2" fill="#ffffff"/>
+                ` : `
+                    <path d="M 82 105 Q 85 101 88 105" stroke="#0f172a" stroke-width="2" fill="none"/>
+                `}
+
+                ${blushStar ? `<text x="88" y="122" font-size="10">⭐</text>` : `<circle cx="92" cy="115" r="4.5" fill="url(#blush)"/>`}
+
+                ${hatOn ? `
+                    <path d="M 85 88 L 98 66 L 105 88 Z" fill="${hatColor}" stroke="#334155" stroke-width="1.5"/>
+                    <circle cx="98" cy="64" r="4" fill="${hatPom}"/>
+                ` : ''}
+            </g>
+            `;
+        }
+
+        // 3. LION KING
+        function renderLion(isOriginal, diffType) {
+            let maneColor = "#ea580c", crownGem = "#ef4444", crownColor = "#fbbf24";
+            let mouthType = "smile", showLeaves = true, eyeWink = false;
+            let blushStar = false, noseColor = "#78350f", earColor = "#fde047";
+            let crownShape = "crown", maneSize = "normal", faceColor = "#fde047";
+            let whisker = false, bgPattern = false, leafRight = "#15803d";
+            let crownSideGems = "#3b82f6", chinTuft = false, teethShow = false;
+            let eyeColor = "#0f172a", flowerHead = false;
+
+            if (!isOriginal) {
+                switch(diffType) {
+                    case 'mane_color': maneColor = "#78350f"; break;
+                    case 'crown_gem': crownGem = "#2563eb"; break;
+                    case 'crown_color': crownColor = "#e2e8f0"; break;
+                    case 'mouth_open': mouthType = "open"; break;
+                    case 'no_leaves': showLeaves = false; break;
+                    case 'eye_wink': eyeWink = true; break;
+                    case 'blush_star': blushStar = true; break;
+                    case 'nose_color': noseColor = "#f43f5e"; break;
+                    case 'ear_color': earColor = "#60a5fa"; break;
+                    case 'crown_shape': crownShape = "horns"; break;
+                    case 'mane_size': maneSize = "big"; break;
+                    case 'face_color': faceColor = "#f97316"; break;
+                    case 'whisker': whisker = true; break;
+                    case 'bg_pattern': bgPattern = true; break;
+                    case 'leaf_right': leafRight = "#ef4444"; break;
+                    case 'crown_side_gems': crownSideGems = "#10b981"; break;
+                    case 'chin_tuft': chinTuft = true; break;
+                    case 'teeth_show': teethShow = true; break;
+                    case 'eye_color': eyeColor = "#16a34a"; break;
+                    case 'flower_head': flowerHead = true; break;
+                }
+            }
+
+            return `
+                <radialGradient id="bgLion" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#fef9c3"/>
+                    <stop offset="100%" stop-color="#fef08a"/>
+                </radialGradient>
+            </defs>
+            <rect width="200" height="200" rx="16" fill="url(#bgLion)"/>
+
+            ${bgPattern ? `<text x="20" y="160" font-size="12">✨</text><text x="160" y="150" font-size="12">✨</text>` : ''}
+
+            ${showLeaves ? `
+                <path d="M 0 0 C 35 15 45 45 0 65 Z" fill="#22c55e" opacity="0.8"/>
+                <path d="M 200 0 C 165 15 155 45 200 65 Z" fill="${leafRight}" opacity="0.8"/>
+            ` : ''}
+
+            <g transform="translate(100, 112)" filter="url(#shadow)">
+                <path d="M 0 -65 C 22 -60 38 -75 48 -50 C 62 -45 72 -25 68 0 C 72 20 58 45 42 55 C 25 65 0 70 -22 65 C -42 60 -62 40 -68 15 C -72 -10 -58 -35 -48 -50 C -38 -65 -18 -60 0 -65 Z" fill="${maneColor}" stroke="#78350f" stroke-width="2" transform="${maneSize === 'big' ? 'scale(1.15)' : 'scale(1)'}"/>
+                
+                ${flowerHead ? `<text x="-48" y="-35" font-size="16">🌺</text>` : ''}
+
+                <circle cx="0" cy="0" r="42" fill="${faceColor}" stroke="#78350f" stroke-width="2"/>
+                <circle cx="-30" cy="-30" r="10" fill="${earColor}" stroke="#78350f" stroke-width="1.5"/>
+                <circle cx="-30" cy="-30" r="6" fill="#f87171"/>
+                <circle cx="30" cy="-30" r="10" fill="${earColor}" stroke="#78350f" stroke-width="1.5"/>
+                <circle cx="30" cy="-30" r="6" fill="#f87171"/>
+                
+                <ellipse cx="0" cy="10" rx="16" ry="12" fill="#ffffff"/>
+                <path d="M -7 2 L 7 2 L 0 10 Z" fill="${noseColor}"/>
+
+                ${whisker ? `<line x1="-15" y1="10" x2="-30" y2="8" stroke="#78350f" stroke-width="1.5"/><line x1="15" y1="10" x2="30" y2="8" stroke="#78350f" stroke-width="1.5"/>` : ''}
+
+                <circle cx="-16" cy="-8" r="4" fill="${eyeColor}"/>
+                <circle cx="-14.5" cy="-10" r="1.5" fill="#ffffff"/>
+                
+                ${eyeWink ? `
+                    <path d="M 12 -8 Q 16 -12 20 -8" stroke="#0f172a" stroke-width="2.5" fill="none"/>
+                ` : `
+                    <circle cx="16" cy="-8" r="4" fill="${eyeColor}"/>
+                    <circle cx="17.5" cy="-10" r="1.5" fill="#ffffff"/>
+                `}
+
+                ${blushStar ? `<text x="-28" y="8" font-size="10">❤️</text>` : `<circle cx="-24" cy="2" r="5" fill="url(#blush)"/>`}
+                <circle cx="24" cy="2" r="5" fill="url(#blush)"/>
+
+                ${chinTuft ? `<path d="M -4 22 L 4 22 L 0 28 Z" fill="${maneColor}"/>` : ''}
+
+                ${mouthType === 'smile' ? `
+                    <path d="M -6 12 Q 0 18 6 12" stroke="#78350f" stroke-width="2" fill="none" stroke-linecap="round"/>
+                ` : `
+                    <ellipse cx="0" cy="14" rx="5" ry="6" fill="#78350f"/>
+                `}
+
+                ${teethShow ? `<path d="M -3 12 L -1 15 L 1 12 L 3 15" stroke="#ffffff" stroke-width="1.5" fill="none"/>` : ''}
+
+                <g transform="translate(0, -48)">
+                    ${crownShape === 'crown' ? `
+                        <path d="M -22 0 L -28 -22 L -10 -10 L 0 -26 L 10 -10 L 28 -22 L 22 0 Z" fill="${crownColor}" stroke="#78350f" stroke-width="1.5"/>
+                        <circle cx="0" cy="-10" r="3.5" fill="${crownGem}"/>
+                        <circle cx="-16" cy="-8" r="2.5" fill="${crownSideGems}"/>
+                        <circle cx="16" cy="-8" r="2.5" fill="${crownSideGems}"/>
+                    ` : `
+                        <path d="M -15 0 L -20 -25 L -5 -5 L 0 -15 L 5 -5 L 20 -25 L 15 0 Z" fill="${crownColor}"/>
+                    `}
+                </g>
+            </g>
+            `;
+        }
+
+        // 4. ASTRONAUT
+        function renderAstronaut(isOriginal, diffType) {
+            let visorColor = "#38bdf8", flagIcon = "🌟", rocketColor = "#ef4444";
+            let showStars = true, moonHeart = false, suitStripe = "#3b82f6";
+            let rocketFlame = false, bigStar = false, antenna = false;
+            let earthBg = false, armWave = false, visorReflection = "oval";
+            let spaceBgGrad = ["#0f172a", "#1e1b4b"], bootColor = "#f8fafc";
+            let showUfo = false, chestBadge = false, backpackColor = "#f8fafc";
+            let flagZigzag = false, saturnRing = false, catEars = false;
+
+            if (!isOriginal) {
+                switch(diffType) {
+                    case 'visor_color': visorColor = "#f43f5e"; break;
+                    case 'flag_icon': flagIcon = "🌙"; break;
+                    case 'rocket_color': rocketColor = "#10b981"; break;
+                    case 'no_stars': showStars = false; break;
+                    case 'moon_crater': moonHeart = true; break;
+                    case 'suit_stripe': suitStripe = "#f59e0b"; break;
+                    case 'rocket_flame': rocketFlame = true; break;
+                    case 'star_big': bigStar = true; break;
+                    case 'helmet_antenna': antenna = true; break;
+                    case 'earth_bg': earthBg = true; break;
+                    case 'arm_wave': armWave = true; break;
+                    case 'visor_reflection': visorReflection = "heart"; break;
+                    case 'space_color': spaceBgGrad = ["#4c1d95", "#831843"]; break;
+                    case 'boot_color': bootColor = "#fde047"; break;
+                    case 'ufo_appear': showUfo = true; break;
+                    case 'chest_badge': chestBadge = true; break;
+                    case 'backpack': backpackColor = "#f59e0b"; break;
+                    case 'flag_pole': flagZigzag = true; break;
+                    case 'saturn_ring': saturnRing = true; break;
+                    case 'helmet_cat_ears': catEars = true; break;
+                }
+            }
+
+            return `
+                <linearGradient id="spaceBg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="${spaceBgGrad[0]}"/>
+                    <stop offset="100%" stop-color="${spaceBgGrad[1]}"/>
+                </linearGradient>
+            </defs>
+            <rect width="200" height="200" rx="16" fill="url(#spaceBg)"/>
+
+            <path d="M 0 160 Q 100 130 200 160 L 200 200 L 0 200 Z" fill="#cbd5e1"/>
+            
+            ${moonHeart ? `<text x="35" y="180" font-size="12">❤️</text>` : `<circle cx="40" cy="175" r="8" fill="#94a3b8" opacity="0.5"/>`}
+
+            ${earthBg ? `<circle cx="30" cy="100" r="14" fill="#3b82f6"/><path d="M 22 98 Q 30 92 38 102" stroke="#22c55e" stroke-width="3" fill="none"/>` : ''}
+
+            ${showStars ? `
+                <g fill="#fde047">
+                    <path d="M 30 30 L 32 36 L 38 38 L 32 40 L 30 46 L 28 40 L 22 38 L 28 36 Z"/>
+                    <path d="M 160 25 L 161 29 L 165 30 L 161 31 L 160 35 L 159 31 L 155 30 L 159 29 Z"/>
+                </g>
+            ` : ''}
+
+            ${bigStar ? `<text x="150" y="40" font-size="18">🌠</text>` : ''}
+            ${showUfo ? `<text x="155" y="110" font-size="16">🛸</text>` : ''}
+            ${saturnRing ? `<ellipse cx="150" cy="160" rx="18" ry="6" fill="none" stroke="#fde047" stroke-width="2"/><circle cx="150" cy="160" r="8" fill="#f97316"/>` : ''}
+
+            <g transform="translate(150, 55) rotate(25)" filter="url(#shadow)">
+                <path d="M 0 -18 C 10 -10 10 10 0 18 C -10 10 -10 -10 0 -18 Z" fill="${rocketColor}" stroke="#ffffff" stroke-width="1"/>
+                <circle cx="0" cy="-2" r="4" fill="#ffffff"/>
+                ${rocketFlame ? `<path d="M -4 18 L 0 28 L 4 18 Z" fill="#f97316"/>` : ''}
+            </g>
+
+            <g transform="translate(90, 105)" filter="url(#shadow)">
+                <rect x="-28" y="10" width="12" height="30" rx="4" fill="${backpackColor}"/>
+                <rect x="-22" y="10" width="44" height="40" rx="12" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+                
+                <rect x="-18" y="48" width="14" height="10" rx="4" fill="${bootColor}"/>
+                <rect x="4" y="48" width="14" height="10" rx="4" fill="${bootColor}"/>
+
+                <circle cx="-10" cy="22" r="5" fill="${suitStripe}"/>
+                ${chestBadge ? `<text x="0" y="26" font-size="10">🔰</text>` : ''}
+
+                ${armWave ? `<path d="M 20 20 Q 35 5 30 -5" stroke="#f8fafc" stroke-width="8" stroke-linecap="round" fill="none"/>` : ''}
+
+                <circle cx="0" cy="-8" r="28" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+                ${catEars ? `<path d="M -22 -30 L -12 -38 L -6 -26 Z M 22 -30 L 12 -38 L 6 -26 Z" fill="#f8fafc"/>` : ''}
+                ${antenna ? `<line x1="0" y1="-36" x2="0" y2="-46" stroke="#94a3b8" stroke-width="2"/><circle cx="0" cy="-48" r="3" fill="#ef4444"/>` : ''}
+
+                <ellipse cx="0" cy="-6" rx="20" ry="15" fill="${visorColor}" stroke="#0284c7" stroke-width="1.5"/>
+                
+                ${visorReflection === 'oval' ? `<ellipse cx="-5" cy="-10" rx="6" ry="3" fill="#ffffff" opacity="0.6"/>` : `<text x="-8" y="-4" font-size="10">❤️</text>`}
+
+                <line x1="32" y1="20" x2="32" y2="-15" stroke="${flagZigzag ? '#ef4444' : '#94a3b8'}" stroke-width="2"/>
+                <text x="34" y="-2" font-size="14">${flagIcon}</text>
+            </g>
+            `;
+        }
+
+        // 5. OWL
+        function renderOwl(isOriginal, diffType) {
+            let owlBody = "#78350f", moonColor = "#fde047", chestPattern = true;
+            let wingColor = "#92400e", beakColor = "#f97316", pupilShape = "circle";
+            let branchLeaves = false, moonFace = false, earTufts = false;
+            let feetColor = "#f97316", starNight = false, chestColor = "#fef3c7";
+            let wingPose = "closed", nightBgGrad = ["#1e1b4b", "#312e81"], sleeping = false;
+            let bowTie = false, eyeRim = "#ffffff", tailFeather = false;
+            let moonStar = false, nestApple = false;
+
+            if (!isOriginal) {
+                switch(diffType) {
+                    case 'owl_body': owlBody = "#475569"; break;
+                    case 'moon_color': moonColor = "#f97316"; break;
+                    case 'no_chest': chestPattern = false; break;
+                    case 'wing_color': wingColor = "#ec4899"; break;
+                    case 'beak_color': beakColor = "#84cc16"; break;
+                    case 'eye_pupil': pupilShape = "heart"; break;
+                    case 'branch_leaves': branchLeaves = true; break;
+                    case 'moon_face': moonFace = true; break;
+                    case 'ear_tufts': earTufts = true; break;
+                    case 'feet_color': feetColor = "#ef4444"; break;
+                    case 'star_night': starNight = true; break;
+                    case 'chest_color': chestColor = "#fde047"; break;
+                    case 'wing_pose': wingPose = "open"; break;
+                    case 'night_bg': nightBgGrad = ["#064e3b", "#022c22"]; break;
+                    case 'sleeping': sleeping = true; break;
+                    case 'bow_tie': bowTie = true; break;
+                    case 'eye_rim': eyeRim = "#fde047"; break;
+                    case 'tail_feather': tailFeather = true; break;
+                    case 'moon_star': moonStar = true; break;
+                    case 'nest_apple': nestApple = true; break;
+                }
+            }
+
+            return `
+                <linearGradient id="nightBg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="${nightBgGrad[0]}"/>
+                    <stop offset="100%" stop-color="${nightBgGrad[1]}"/>
+                </linearGradient>
+            </defs>
+            <rect width="200" height="200" rx="16" fill="url(#nightBg)"/>
+
+            ${starNight ? `<text x="30" y="40" font-size="12">⭐</text><text x="80" y="30" font-size="10">⭐</text>` : ''}
+
+            <g filter="url(#shadow)">
+                <path d="M 140 25 A 35 35 0 1 0 175 75 A 28 28 0 1 1 140 25 Z" fill="${moonColor}"/>
+                ${moonFace ? `<circle cx="138" cy="48" r="2" fill="#78350f"/><path d="M 135 55 Q 140 58 145 55" stroke="#78350f" stroke-width="1.5" fill="none"/>` : ''}
+                ${moonStar ? `<text x="165" y="80" font-size="12">✨</text>` : ''}
+            </g>
+
+            <path d="M 10 150 Q 80 145 190 155" stroke="#451a03" stroke-width="10" stroke-linecap="round" fill="none"/>
+            ${branchLeaves ? `<path d="M 140 148 C 150 135 165 140 160 150 Z" fill="#22c55e"/>` : ''}
+            ${nestApple ? `<text x="25" y="145" font-size="14">🍎</text>` : ''}
+
+            <g transform="translate(90, 110)" filter="url(#shadow)">
+                ${earTufts ? `<path d="M -22 -22 L -32 -40 L -12 -30 Z M 22 -22 L 32 -40 L 12 -30 Z" fill="${owlBody}"/>` : ''}
+
+                <ellipse cx="0" cy="10" rx="28" ry="32" fill="${owlBody}" stroke="#451a03" stroke-width="2"/>
+                <ellipse cx="0" cy="16" rx="18" ry="20" fill="${chestColor}"/>
+
+                ${chestPattern ? `
+                    <path d="M -8 10 Q 0 15 8 10 M -10 18 Q 0 23 10 18 M -6 26 Q 0 30 6 26" stroke="#d97706" stroke-width="2" fill="none" stroke-linecap="round"/>
+                ` : ''}
+
+                ${wingPose === 'closed' ? `
+                    <path d="M -26 0 C -38 10 -30 30 -22 25 Z" fill="${wingColor}"/>
+                    <path d="M 26 0 C 38 10 30 30 22 25 Z" fill="${wingColor}"/>
+                ` : `
+                    <path d="M -26 0 C -48 -10 -40 20 -22 25 Z" fill="${wingColor}"/>
+                    <path d="M 26 0 C 48 -10 40 20 22 25 Z" fill="${wingColor}"/>
+                `}
+
+                <circle cx="-13" cy="-10" r="13" fill="${eyeRim}" stroke="#451a03" stroke-width="1.5"/>
+                <circle cx="13" cy="-10" r="13" fill="${eyeRim}" stroke="#451a03" stroke-width="1.5"/>
+
+                ${sleeping ? `
+                    <path d="M -18 -10 Q -13 -5 -8 -10 M 8 -10 Q 13 -5 18 -10" stroke="#0f172a" stroke-width="2" fill="none"/>
+                ` : `
+                    ${pupilShape === 'circle' ? `
+                        <circle cx="-11" cy="-10" r="6" fill="#0f172a"/>
+                        <circle cx="-9" cy="-12" r="2" fill="#ffffff"/>
+                        <circle cx="11" cy="-10" r="6" fill="#0f172a"/>
+                        <circle cx="13" cy="-12" r="2" fill="#ffffff"/>
+                    ` : `
+                        <text x="-16" y="-5" font-size="10">❤️</text>
+                        <text x="8" y="-5" font-size="10">❤️</text>
+                    `}
+                `}
+
+                <path d="M -4 -4 L 4 -4 L 0 5 Z" fill="${beakColor}"/>
+                ${bowTie ? `<path d="M -8 14 L 0 18 L -8 22 Z M 8 14 L 0 18 L 8 22 Z" fill="#ef4444"/>` : ''}
+
+                <ellipse cx="-10" cy="40" rx="4" ry="2" fill="${feetColor}"/>
+                <ellipse cx="10" cy="40" rx="4" ry="2" fill="${feetColor}"/>
+            </g>
+            `;
+        }
+
+        // 6. TRAIN
+        function renderTrain(isOriginal, diffType) {
+            let engineColor = "#ef4444", cabinColor = "#3b82f6", smokeCount = 3;
+            let showRainbow = true, wheelColor = "#f59e0b", windowLight = false;
+            let chimneyShape = "normal", smokeHeart = false, trackColor = "#475569";
+            let rainbowReverse = false, headlight = false, cabinStripes = false;
+            let skyCloud = false, engineFrontStar = false, driverHat = false;
+            let wheelCount = 2, cabinRoof = "#3b82f6", trackFlowers = false;
+            let birdFlying = false, sunBg = false;
+
+            if (!isOriginal) {
+                switch(diffType) {
+                    case 'engine_color': engineColor = "#10b981"; break;
+                    case 'cabin_color': cabinColor = "#8b5cf6"; break;
+                    case 'smoke_few': smokeCount = 1; break;
+                    case 'no_rainbow': showRainbow = false; break;
+                    case 'wheel_color': wheelColor = "#3b82f6"; break;
+                    case 'window_light': windowLight = true; break;
+                    case 'chimney_shape': chimneyShape = "wide"; break;
+                    case 'smoke_shape': smokeHeart = true; break;
+                    case 'track_color': trackColor = "#78350f"; break;
+                    case 'rainbow_color': rainbowReverse = true; break;
+                    case 'headlight': headlight = true; break;
+                    case 'cabin_stripes': cabinStripes = true; break;
+                    case 'sky_cloud': skyCloud = true; break;
+                    case 'engine_front': engineFrontStar = true; break;
+                    case 'driver_hat': driverHat = true; break;
+                    case 'wheel_count': wheelCount = 3; break;
+                    case 'cabin_roof': cabinRoof = "#ef4444"; break;
+                    case 'track_flowers': trackFlowers = true; break;
+                    case 'bird_flying': birdFlying = true; break;
+                    case 'sun_bg': sunBg = true; break;
+                }
+            }
+
+            return `
+                <linearGradient id="trainBg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#bae6fd"/>
+                    <stop offset="100%" stop-color="#e0f2fe"/>
+                </linearGradient>
+            </defs>
+            <rect width="200" height="200" rx="16" fill="url(#trainBg)"/>
+
+            ${sunBg ? `<circle cx="25" cy="25" r="15" fill="#fbbf24"/>` : ''}
+
+            ${showRainbow ? `
+                <path d="M 20 160 A 100 100 0 0 1 180 160" stroke="${rainbowReverse ? '#10b981' : '#f43f5e'}" stroke-width="4" fill="none" opacity="0.6"/>
+                <path d="M 24 160 A 96 96 0 0 1 176 160" stroke="${rainbowReverse ? '#ec4899' : '#fbbf24'}" stroke-width="4" fill="none" opacity="0.6"/>
+            ` : ''}
+
+            ${skyCloud ? `<ellipse cx="160" cy="35" rx="18" ry="10" fill="#ffffff"/>` : ''}
+            ${birdFlying ? `<text x="75" y="35" font-size="12">🐦</text>` : ''}
+
+            <line x1="10" y1="160" x2="190" y2="160" stroke="${trackColor}" stroke-width="4"/>
+            ${trackFlowers ? `<text x="160" y="172" font-size="12">🌸</text>` : ''}
+
+            <g fill="#ffffff" opacity="0.85">
+                ${smokeHeart ? `<text x="35" y="55" font-size="14">❤️</text>` : `<circle cx="55" cy="70" r="10"/>`}
+                ${smokeCount >= 2 ? `<circle cx="40" cy="52" r="14"/>` : ''}
+                ${smokeCount >= 3 ? `<circle cx="20" cy="38" r="18"/>` : ''}
+            </g>
+
+            <g filter="url(#shadow)">
+                <rect x="${chimneyShape === 'wide' ? '40' : '45'}" y="85" width="${chimneyShape === 'wide' ? '26' : '16'}" height="25" fill="#334155" rx="2"/>
+                ${driverHat ? `<text x="48" y="72" font-size="14">🧢</text>` : ''}
+
+                <rect x="35" y="110" width="70" height="38" fill="${engineColor}" rx="6" stroke="#1e293b" stroke-width="1.5"/>
+                ${engineFrontStar ? `<text x="38" y="132" font-size="12">⭐</text>` : ''}
+
+                ${headlight ? `<polygon points="35,120 15,110 15,138" fill="#fde047" opacity="0.7"/>` : ''}
+
+                <rect x="95" y="90" width="55" height="58" fill="${cabinColor}" rx="6" stroke="#1e293b" stroke-width="1.5"/>
+                <rect x="95" y="86" width="55" height="8" fill="${cabinRoof}"/>
+
+                ${cabinStripes ? `<line x1="95" y1="130" x2="150" y2="130" stroke="#fde047" stroke-width="4"/>` : ''}
+
+                <rect x="110" y="100" width="25" height="20" fill="#e0f2fe" rx="4" stroke="#1e293b" stroke-width="2"/>
+                ${windowLight ? `<text x="115" y="116" font-size="12">🐻</text>` : ''}
+
+                ${wheelCount === 2 ? `
+                    <circle cx="55" cy="150" r="12" fill="${wheelColor}" stroke="#334155" stroke-width="3"/>
+                    <circle cx="85" cy="150" r="12" fill="${wheelColor}" stroke="#334155" stroke-width="3"/>
+                    <circle cx="125" cy="148" r="15" fill="${wheelColor}" stroke="#334155" stroke-width="3"/>
+                ` : `
+                    <circle cx="48" cy="150" r="9" fill="${wheelColor}" stroke="#334155" stroke-width="2"/>
+                    <circle cx="70" cy="150" r="9" fill="${wheelColor}" stroke="#334155" stroke-width="2"/>
+                    <circle cx="92" cy="150" r="9" fill="${wheelColor}" stroke="#334155" stroke-width="2"/>
+                    <circle cx="125" cy="148" r="15" fill="${wheelColor}" stroke="#334155" stroke-width="3"/>
+                `}
+            </g>
+            `;
+        }
+
+        // 7. BEES
+        function renderBees(isOriginal, diffType) {
+            let flowerPetal = "#f43f5e", beeCount = 2, flowerCenter = "#f59e0b";
+            let stemLeaf = false, beeStripes = "#1e293b", beeWing = "oval";
+            let bgGrad = ["#f0fdf4", "#dcfce7"], flowerFace = false, beeCrown = false;
+            let honeyDrop = false, ladybug = false, bee2Pos = "top";
+            let petalCount = 5, beeCheeks = false, stemCurve = "right";
+            let sparkles = false, sunCorner = false, beeTrail = false;
+            let butterfly = false, potBelow = false;
+
+            if (!isOriginal) {
+                switch(diffType) {
+                    case 'petal_color': flowerPetal = "#8b5cf6"; break;
+                    case 'bee_single': beeCount = 1; break;
+                    case 'flower_center': flowerCenter = "#ef4444"; break;
+                    case 'stem_leaf': stemLeaf = true; break;
+                    case 'bee_stripes': beeStripes = "#ec4899"; break;
+                    case 'bee_wing': beeWing = "heart"; break;
+                    case 'bg_color': bgGrad = ["#fef3c7", "#fde68a"]; break;
+                    case 'flower_face': flowerFace = true; break;
+                    case 'bee_crown': beeCrown = true; break;
+                    case 'honey_drop': honeyDrop = true; break;
+                    case 'ladybug': ladybug = true; break;
+                    case 'bee2_position': bee2Pos = "low"; break;
+                    case 'petal_count': petalCount = 6; break;
+                    case 'bee_cheeks': beeCheeks = true; break;
+                    case 'stem_curve': stemCurve = "left"; break;
+                    case 'sparkles': sparkles = true; break;
+                    case 'sun_corner': sunCorner = true; break;
+                    case 'bee_trail': beeTrail = true; break;
+                    case 'butterfly': butterfly = true; break;
+                    case 'pot_below': potBelow = true; break;
+                }
+            }
+
+            return `
+                <radialGradient id="beeBg" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="${bgGrad[0]}"/>
+                    <stop offset="100%" stop-color="${bgGrad[1]}"/>
+                </radialGradient>
+            </defs>
+            <rect width="200" height="200" rx="16" fill="url(#beeBg)"/>
+
+            ${sunCorner ? `<circle cx="25" cy="25" r="16" fill="#fbbf24"/>` : ''}
+            ${sparkles ? `<text x="130" y="130" font-size="14">✨</text>` : ''}
+            ${beeTrail ? `<path d="M 30 50 Q 80 20 120 50" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/>` : ''}
+
+            <g transform="translate(100, 120)" filter="url(#shadow)">
+                <path d="M 0 30 Q ${stemCurve === 'right' ? '10' : '-15'} 50 0 70" stroke="#22c55e" stroke-width="6" fill="none" stroke-linecap="round"/>
+                
+                ${stemLeaf ? `<path d="M 0 45 Q 20 40 25 50 Z" fill="#22c55e"/>` : ''}
+                ${ladybug ? `<circle cx="-8" cy="42" r="4" fill="#ef4444"/><circle cx="-8" cy="42" r="1" fill="#000000"/>` : ''}
+
+                <g fill="${flowerPetal}" stroke="#9f1239" stroke-width="1.5">
+                    <circle cx="0" cy="-32" r="16"/>
+                    <circle cx="28" cy="-10" r="16"/>
+                    <circle cx="18" cy="24" r="16"/>
+                    <circle cx="-18" cy="24" r="16"/>
+                    <circle cx="-28" cy="-10" r="16"/>
+                    ${petalCount === 6 ? `<circle cx="0" cy="32" r="16"/>` : ''}
+                </g>
+                <circle cx="0" cy="0" r="18" fill="${flowerCenter}" stroke="#78350f" stroke-width="1.5"/>
+
+                ${flowerFace ? `<circle cx="-6" cy="-4" r="2" fill="#000000"/><circle cx="6" cy="-4" r="2" fill="#000000"/><path d="M -4 4 Q 0 8 4 4" stroke="#000000" stroke-width="1.5" fill="none"/>` : ''}
+                ${honeyDrop ? `<path d="M 10 10 Q 15 25 10 28 Q 5 25 10 10 Z" fill="#f59e0b"/>` : ''}
+            </g>
+
+            ${potBelow ? `<rect x="80" y="170" width="40" height="22" fill="#d97706" rx="4"/>` : ''}
+
+            <g transform="translate(60, 55) rotate(-15)" filter="url(#shadow)">
+                ${beeWing === 'oval' ? `
+                    <ellipse cx="-4" cy="-12" rx="7" ry="12" fill="#bae6fd" opacity="0.8"/>
+                    <ellipse cx="6" cy="-12" rx="7" ry="12" fill="#bae6fd" opacity="0.8"/>
+                ` : `
+                    <text x="-12" y="-12" font-size="12">❤️</text>
+                `}
+
+                <ellipse cx="0" cy="0" rx="16" ry="12" fill="#fbbf24" stroke="#78350f" stroke-width="1.5"/>
+                <path d="M -4 -11 L -4 11 M 3 -12 L 3 12" stroke="${beeStripes}" stroke-width="4"/>
+                <circle cx="-9" cy="-2" r="2" fill="#1e293b"/>
+                ${beeCheeks ? `<circle cx="-7" cy="3" r="2" fill="#f43f5e"/>` : ''}
+                ${beeCrown ? `<text x="-6" y="-14" font-size="10">👑</text>` : ''}
+            </g>
+
+            ${beeCount === 2 ? `
+                ${!butterfly ? `
+                    <g transform="translate(145, ${bee2Pos === 'top' ? '60' : '110'}) scale(0.75) rotate(10)" filter="url(#shadow)">
+                        <ellipse cx="-4" cy="-12" rx="7" ry="12" fill="#bae6fd" opacity="0.8"/>
+                        <ellipse cx="6" cy="-12" rx="7" ry="12" fill="#bae6fd" opacity="0.8"/>
+                        <ellipse cx="0" cy="0" rx="16" ry="12" fill="#fbbf24" stroke="#78350f" stroke-width="1.5"/>
+                        <path d="M -4 -11 L -4 11 M 3 -12 L 3 12" stroke="${beeStripes}" stroke-width="4"/>
+                        <circle cx="-9" cy="-2" r="2" fill="#1e293b"/>
+                    </g>
+                ` : `
+                    <text x="135" y="65" font-size="20">🦋</text>
+                `}
+            ` : ''}
+            `;
+        }
+
+        // 8. CAT & DOG
+        function renderCatDog(isOriginal, diffType) {
+            let catColor = "#f97316", accessory = "fish", dogEars = "down";
+            let catEyes = "normal", dogColor = "#f8fafc", noAccessory = false;
+            let catWhiskers = false, dogTongue = false, bgGrad = ["#ffedd5", "#fed7aa"];
+            let heartBetween = false, catStripes = false, dogSpot = false;
+            let ballToy = false, catBell = false, dogCollar = false;
+            let pawsUp = false, pawPrints = false, catTail = false;
+            let dogNose = "round", sparkleAround = false;
+
+            if (!isOriginal) {
+                switch(diffType) {
+                    case 'cat_color': catColor = "#a855f7"; break;
+                    case 'accessory_bone': accessory = "bone"; break;
+                    case 'dog_ears': dogEars = "up"; break;
+                    case 'cat_eyes': catEyes = "smile"; break;
+                    case 'dog_color': dogColor = "#d97706"; break;
+                    case 'no_accessory': noAccessory = true; break;
+                    case 'cat_whiskers': catWhiskers = true; break;
+                    case 'dog_tongue': dogTongue = true; break;
+                    case 'bg_color': bgGrad = ["#fbcfe8", "#f472b6"]; break;
+                    case 'heart_between': heartBetween = true; break;
+                    case 'cat_stripes': catStripes = true; break;
+                    case 'dog_spot': dogSpot = true; break;
+                    case 'ball_toy': ballToy = true; break;
+                    case 'cat_bell': catBell = true; break;
+                    case 'dog_collar': dogCollar = true; break;
+                    case 'paws_up': pawsUp = true; break;
+                    case 'paw_prints': pawPrints = true; break;
+                    case 'cat_tail': catTail = true; break;
+                    case 'dog_nose': dogNose = "heart"; break;
+                    case 'sparkle_around': sparkleAround = true; break;
+                }
+            }
+
+            return `
+                <linearGradient id="petBg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="${bgGrad[0]}"/>
+                    <stop offset="100%" stop-color="${bgGrad[1]}"/>
+                </linearGradient>
+            </defs>
+            <rect width="200" height="200" rx="16" fill="url(#petBg)"/>
+
+            ${heartBetween ? `<text x="92" y="95" font-size="16">❤️</text>` : ''}
+            ${sparkleAround ? `<text x="90" y="65" font-size="16">✨</text>` : ''}
+            ${pawPrints ? `<text x="160" y="165" font-size="14">🐾</text>` : ''}
+
+            <!-- Dog -->
+            <g transform="translate(65, 115)" filter="url(#shadow)">
+                <ellipse cx="0" cy="0" rx="26" ry="22" fill="${dogColor}" stroke="#334155" stroke-width="2"/>
+                
+                ${dogEars === 'down' ? `
+                    <path d="M -22 -10 C -35 0 -30 20 -20 15 Z" fill="#64748b"/>
+                    <path d="M 22 -10 C 35 0 30 20 20 15 Z" fill="#64748b"/>
+                ` : `
+                    <path d="M -20 -12 L -28 -30 L -10 -20 Z" fill="#64748b"/>
+                    <path d="M 20 -12 L 28 -30 L 10 -20 Z" fill="#64748b"/>
+                `}
+
+                ${dogSpot ? `<circle cx="-10" cy="-4" r="8" fill="#334155" opacity="0.3"/>` : ''}
+
+                <ellipse cx="0" cy="6" rx="12" ry="9" fill="#ffffff"/>
+                ${dogNose === 'round' ? `<ellipse cx="0" cy="2" rx="4" ry="3" fill="#1e293b"/>` : `<text x="-4" y="6" font-size="8">❤️</text>`}
+
+                ${dogTongue ? `<path d="M -2 8 Q 0 16 4 12 Z" fill="#ef4444"/>` : ''}
+
+                <circle cx="-10" cy="-4" r="3" fill="#1e293b"/>
+                <circle cx="10" cy="-4" r="3" fill="#1e293b"/>
+                <circle cx="-9" cy="-5" r="1" fill="#ffffff"/>
+                <circle cx="11" cy="-5" r="1" fill="#ffffff"/>
+
+                <circle cx="-18" cy="4" r="4.5" fill="url(#blush)"/>
+                <circle cx="18" cy="4" r="4.5" fill="url(#blush)"/>
+
+                ${dogCollar ? `<rect x="-14" y="16" width="28" height="4" fill="#ef4444" rx="2"/>` : ''}
+                ${pawsUp ? `<circle cx="-12" cy="18" r="5" fill="#ffffff" stroke="#334155"/><circle cx="12" cy="18" r="5" fill="#ffffff" stroke="#334155"/>` : ''}
+            </g>
+
+            <!-- Cat -->
+            <g transform="translate(135, 110)" filter="url(#shadow)">
+                ${catTail ? `<path d="M 20 15 Q 35 10 32 -5" stroke="${catColor}" stroke-width="5" fill="none" stroke-linecap="round"/>` : ''}
+
+                <ellipse cx="0" cy="0" rx="24" ry="20" fill="${catColor}" stroke="#334155" stroke-width="2"/>
+                
+                <!-- Cat Ears -->
+                <path d="M -18 -12 L -24 -30 L -6 -18 Z" fill="${catColor}" stroke="#334155" stroke-width="1.5"/>
+                <path d="M -16 -14 L -20 -24 L -8 -18 Z" fill="#f472b6"/>
+                <path d="M 18 -12 L 24 -30 L 6 -18 Z" fill="${catColor}" stroke="#334155" stroke-width="1.5"/>
+                <path d="M 16 -14 L 20 -24 L 8 -18 Z" fill="#f472b6"/>
+
+                ${catStripes ? `<path d="M -6 -16 L 0 -10 L 6 -16 M -4 -12 L 0 -8 L 4 -12" stroke="#78350f" stroke-width="2" fill="none"/>` : ''}
+
+                <!-- Cat Eyes -->
+                ${catEyes === 'normal' ? `
+                    <ellipse cx="-8" cy="-2" rx="3.5" ry="4.5" fill="#10b981"/>
+                    <circle cx="-8" cy="-2" r="2" fill="#0f172a"/>
+                    <ellipse cx="8" cy="-2" rx="3.5" ry="4.5" fill="#10b981"/>
+                    <circle cx="8" cy="-2" r="2" fill="#0f172a"/>
+                ` : `
+                    <path d="M -12 -2 Q -8 -7 -4 -2 M 4 -2 Q 8 -7 12 -2" stroke="#0f172a" stroke-width="2" fill="none" stroke-linecap="round"/>
+                `}
+
+                <polygon points="0,3 -3,6 3,6" fill="#f472b6"/>
+                <path d="M -3 8 Q 0 11 3 8" stroke="#334155" stroke-width="1.5" fill="none"/>
+
+                ${catWhiskers ? `
+                    <line x1="-12" y1="4" x2="-26" y2="2" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="-12" y1="7" x2="-24" y2="9" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="12" y1="4" x2="26" y2="2" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="12" y1="7" x2="24" y2="9" stroke="#334155" stroke-width="1.5"/>
+                ` : ''}
+
+                <circle cx="-14" cy="4" r="4" fill="url(#blush)"/>
+                <circle cx="14" cy="4" r="4" fill="url(#blush)"/>
+
+                ${catBell ? `<circle cx="0" cy="18" r="4" fill="#fbbf24" stroke="#78350f" stroke-width="1"/>` : ''}
+            </g>
+
+            <!-- Accessory Center -->
+            ${!noAccessory ? `
+                <g transform="translate(100, 160)" filter="url(#shadow)">
+                    ${ballToy ? `
+                        <circle cx="0" cy="0" r="10" fill="#ec4899"/>
+                        <path d="M -10 0 A 10 10 0 0 1 10 0 Z" fill="#3b82f6"/>
+                    ` : accessory === 'fish' ? `
+                        <path d="M -12 0 C -4 -10 8 -10 12 0 C 8 10 -4 10 -12 0 Z" fill="#38bdf8"/>
+                        <polygon points="-12,0 -18,-6 -18,6" fill="#0284c7"/>
+                        <circle cx="6" cy="-2" r="1.5" fill="#0f172a"/>
+                    ` : `
+                        <path d="M -12 -3 C -10 -8 -5 -8 -3 -3 L 3 -3 C 5 -8 10 -8 12 -3 C 14 -1 14 1 12 3 L 3 3 C 5 8 10 8 12 3 L -3 3 C -5 8 -10 8 -12 3 C -14 1 -14 -1 -12 -3 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+                    `}
+                </g>
+            ` : ''}
+            `;
+        }
+    </script>
+</body>
+</html>
