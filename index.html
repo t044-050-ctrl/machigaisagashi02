@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <title>まちがいさがし２</title>
-    <meta property="og:title" content="まちがいさがし２">
-    <meta property="og:description" content="【自立活動】見る力を鍛えるまちがいさがしアプリです。">
-    <meta property="og:type" content="website">
+    <title>まちがいさがし２</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: M PLUS Rounded 1c -->
@@ -168,7 +165,8 @@
             { id: 'ocean', num: '4', symbol: '④', name: 'うみのいきもの' },
             { id: 'racing', num: '5', symbol: '⑤', name: 'レーシングカー' },
             { id: 'penguin', num: '6', symbol: '⑥', name: 'ペンギンのおやこ' },
-            { id: 'festival', num: '7', symbol: '⑦', name: 'なつまつり' }
+            { id: 'festival', num: '7', symbol: '⑦', name: 'なつまつり' },
+            { id: 'flower', num: '8', symbol: '⑧', name: 'はなばたけ' }
         ];
 
         // Global Game State
@@ -316,7 +314,7 @@
             return arr;
         }
 
-        // 7テーマそれぞれに、絵の形や部品そのものが変わる20種類の間違いを用意
+        // 8テーマそれぞれに、絵の形や部品そのものが変わる20種類の間違いを用意
         const variationSpots = [
           [100,65,18],[135,72,18],[75,105,18],[120,120,18],[45,145,17],
           [155,145,17],[95,95,16],[60,65,16],[145,45,16],[100,150,17],
@@ -750,6 +748,9 @@
             if(ch(0)) scene += `<path d="M37 67 Q43 62 49 67" fill="none" stroke="#263746" stroke-width="2.5" stroke-linecap="round"/>`;
             if(ch(1)) scene += `<path d="M50 84 Q57 79 64 84 L57 99Z" fill="#ffb52e" stroke="#c67a1b" stroke-width="2"/>`;
             if(ch(2)) scene += `<ellipse cx="42" cy="164" rx="18" ry="6" fill="#ffb52e" stroke="#c67a1b" stroke-width="2"/>`;
+          } else if (theme === 'flower') {
+            // はなばたけ：ちょう・太陽・色とりどりの花を見つけるステージ。
+            scene = `<rect width="200" height="200" rx="12" fill="#c9efff"/><circle cx="164" cy="34" r="19" fill="#ffd95c"/><g stroke="#e8b942" stroke-width="2"><path d="M164 8 V2 M164 66 V60 M138 34 H132 M196 34 H190 M145 15 L140 10 M183 53 L188 58 M183 15 L188 10 M145 53 L140 58"/></g><path d="M0 143 Q45 124 87 143 T200 138 V200 H0Z" fill="#83cc77"/><path d="M0 169 Q45 158 92 171 T200 164 V200 H0Z" fill="#5eb965"/><g stroke="#39864a" stroke-width="3" fill="none"><path d="M40 169 L40 112 M99 171 L99 91 M158 166 L158 119"/></g><g stroke="#39864a" stroke-width="2"><path d="M40 145 Q22 130 19 145 Q29 158 40 145Z" fill="#54ad5b"/><path d="M99 138 Q119 120 124 137 Q115 151 99 138Z" fill="#54ad5b"/><path d="M158 146 Q140 132 137 147 Q147 159 158 146Z" fill="#54ad5b"/></g><g stroke="#9b5b91" stroke-width="1.5"><g transform="translate(40 105)"><ellipse cy="-10" rx="7" ry="11" fill="#ff8ab5"/><ellipse cx="9" cy="-3" rx="7" ry="11" transform="rotate(60 9 -3)" fill="#ff8ab5"/><ellipse cx="6" cy="8" rx="7" ry="11" transform="rotate(125 6 8)" fill="#ff8ab5"/><ellipse cx="-6" cy="8" rx="7" ry="11" transform="rotate(-125 -6 8)" fill="#ff8ab5"/><ellipse cx="-9" cy="-3" rx="7" ry="11" transform="rotate(-60 -9 -3)" fill="#ff8ab5"/><circle r="6" fill="#ffd34f" stroke="#b9852b"/></g><g transform="translate(99 83)" stroke="#b9852b"><ellipse cy="-10" rx="7" ry="11" fill="#fff0a2"/><ellipse cx="9" cy="-3" rx="7" ry="11" transform="rotate(60 9 -3)" fill="#fff0a2"/><ellipse cx="6" cy="8" rx="7" ry="11" transform="rotate(125 6 8)" fill="#fff0a2"/><ellipse cx="-6" cy="8" rx="7" ry="11" transform="rotate(-125 -6 8)" fill="#fff0a2"/><ellipse cx="-9" cy="-3" rx="7" ry="11" transform="rotate(-60 -9 -3)" fill="#fff0a2"/><circle r="6" fill="#eaa84a"/></g><g transform="translate(158 112)" stroke="#8e477a"><ellipse cy="-9" rx="7" ry="10" fill="#c69aff"/><ellipse cx="8" cy="-3" rx="7" ry="10" transform="rotate(60 8 -3)" fill="#c69aff"/><ellipse cx="5" cy="7" rx="7" ry="10" transform="rotate(125 5 7)" fill="#c69aff"/><ellipse cx="-5" cy="7" rx="7" ry="10" transform="rotate(-125 -5 7)" fill="#c69aff"/><ellipse cx="-8" cy="-3" rx="7" ry="10" transform="rotate(-60 -8 -3)" fill="#c69aff"/><circle r="5.5" fill="#ffd34f"/></g></g><g transform="translate(126 57)" stroke="#6d8e45" stroke-width="1.5"><ellipse cx="-7" cy="0" rx="8" ry="5" fill="#fff"/><ellipse cx="7" cy="0" rx="8" ry="5" fill="#fff"/><ellipse cx="-7" cy="0" rx="3" ry="5" fill="#f4a0c6"/><ellipse cx="7" cy="0" rx="3" ry="5" fill="#f4a0c6"/><circle r="3" fill="#f0c43d"/><path d="M-2 2 Q-8 12 -15 9 M2 2 Q8 12 15 9" fill="none"/></g><g fill="#fff" opacity=".85"><circle cx="25" cy="42" r="3"/><circle cx="78" cy="31" r="2"/><circle cx="110" cy="49" r="2.5"/></g>`;
           } else { // なつまつり：提灯の模様、背景の花火、金魚の色を自然な差分に
             scene += `<rect width="200" height="200" rx="12" fill="#142b59"/><circle cx="29" cy="38" r="1.5" fill="#fff3c4"/><circle cx="171" cy="25" r="1.5" fill="#fff3c4"/><g stroke="${ch(12)?'#f5a7d5':'#f5cf68'}" stroke-width="1.5" fill="none"><path d="M150 22 L150 8 M150 22 L138 12 M150 22 L163 11 M150 22 L137 27 M150 22 L164 30 M150 22 L150 39"/><circle cx="150" cy="22" r="12"/><path d="M30 42 L30 30 M30 42 L20 34 M30 42 L40 34 M30 42 L20 49 M30 42 L40 50"/></g>
             <path d="M0 62 Q100 73 200 60" fill="none" stroke="#e6cba1" stroke-width="2.5"/><g stroke="#9c4937" stroke-width="1.5"><path d="M20 58 V65 M58 61 V68 M96 63 V70 M134 62 V69 M172 58 V65"/><path d="M10 72 Q20 61 30 72 Q33 82 30 89 Q20 99 10 89 Q7 82 10 72Z" fill="#f5a65d"/><path d="M46 75 Q58 63 70 75 Q73 85 70 92 Q58 102 46 92 Q43 85 46 75Z" fill="#f5a65d"/><path d="M84 77 Q96 65 108 77 Q111 87 108 94 Q96 104 84 94 Q81 87 84 77Z" fill="#f5a65d"/><path d="M122 76 Q134 64 146 76 Q149 86 146 93 Q134 103 122 93 Q119 86 122 76Z" fill="#f5a65d"/><path d="M160 72 Q172 60 184 72 Q187 82 184 89 Q172 99 160 89 Q157 82 160 72Z" fill="#f5a65d"/></g>
@@ -915,6 +916,46 @@
                 `<path d="M133 119 Q146 136 159 119" fill="none" stroke="#71899a" stroke-width="5" stroke-linecap="round"/>`
               ];
               oneSpot(variants[n % variants.length]);
+            } else if (theme === 'flower') {
+              const variants = [
+                s=>s.replace('fill="#ffd95c"','fill="#ff8a5b"'),
+                s=>s.replace('r="19" fill="#ffd95c"','r="15" fill="#ffd95c"'),
+                s=>s.replace('fill="#ff8ab5"','fill="#f4cf4e"'),
+                s=>s.replace('fill="#fff0a2"','fill="#ff8ab5"'),
+                s=>s.replace('fill="#c69aff"','fill="#f4cf4e"'),
+                s=>s.replace('cx="40" cy="105"','cx="45" cy="105"'),
+                s=>s.replace('cx="99" cy="83"','cx="104" cy="83"'),
+                s=>s.replace('cx="158" cy="112"','cx="163" cy="112"'),
+                s=>s.replace('cx="126" cy="57"','cx="132" cy="57"'),
+                s=>s.replace('r="3" fill="#fff"','r="4" fill="#fff"'),
+                s=>s.replace('M40 169 L40 112','M40 169 L40 120'),
+                s=>s.replace('M99 171 L99 91','M99 171 L99 101'),
+                s=>s.replace('M158 166 L158 119','M158 166 L158 126'),
+                s=>s.replace('fill="#83cc77"','fill="#78bd6d"'),
+                s=>s.replace('fill="#5eb965"','fill="#69b5dc"'),
+                s=>s.replace('fill="#54ad5b"','fill="#f1a45a"'),
+                s=>s.replace('fill="#ffd34f"','fill="#fff0a2"'),
+                s=>s.replace('fill="#eaa84a"','fill="#c69aff"'),
+                s=>s.replace('fill="#f4a0c6"','fill="#fff"'),
+                s=>s.replace('cx="164" cy="34"','cx="159" cy="34"'),
+                // 花の茎を花びらからはっきり離す
+                s=>s.replace('M40 169 L40 112','M40 169 L40 127'),
+                s=>s.replace('M99 171 L99 91','M99 171 L99 105'),
+                s=>s.replace('M158 166 L158 119','M158 166 L158 132'),
+                // 虫の一部分だけ色を変える
+                s=>s.replace('fill="#f4a0c6"','fill="#ffd34f"'),
+                // 花びらを一枚だけ別の色にする
+                s=>s.replace('<ellipse cy="-10" rx="7" ry="11" fill="#ff8ab5"/>','<ellipse cy="-10" rx="7" ry="11" fill="#fff0a2"/>'),
+                // 花の背の高さを変える
+                s=>s.replace('translate(99 83)','translate(99 72)'),
+                // 葉っぱを大きくする
+                s=>s.replace('Q22 130 19 145 Q29 158 40 145Z','Q17 124 14 145 Q27 163 40 145Z'),
+                // 葉っぱを茎から離す
+                s=>s.replace('M40 145 Q22 130 19 145 Q29 158 40 145Z','M40 145 Q17 121 12 139 Q23 151 34 148Z'),
+                // 太陽の光の線を一本減らす
+                s=>s.replace('M145 15 L140 10','M145 15 L145 15')
+              ];
+              scene = variants[n % variants.length](scene);
             } else if (theme === 'festival') {
               const variants = [
                 `<path d="M150 22 L150 8 M150 22 L138 12 M150 22 L163 11 M150 22 L137 27 M150 22 L164 30 M150 22 L150 39" stroke="#f5a7d5" stroke-width="2.5" fill="none"/>`,
